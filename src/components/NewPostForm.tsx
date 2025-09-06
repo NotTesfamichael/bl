@@ -205,10 +205,10 @@ export function NewPostForm({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
       {/* Main Editor */}
-      <div className="lg:col-span-2">
-        <Card>
+      <div className="lg:col-span-4">
+        <Card className="h-full">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Content</CardTitle>
@@ -240,10 +240,10 @@ export function NewPostForm({
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {isPreview ? (
               <div
-                className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-4"
+                className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-6"
                 dangerouslySetInnerHTML={{ __html: content }}
               />
             ) : (
@@ -258,7 +258,7 @@ export function NewPostForm({
       </div>
 
       {/* Sidebar */}
-      <div className="space-y-6">
+      <div className="lg:col-span-2 space-y-6">
         {/* Post Settings */}
         <Card>
           <CardHeader>

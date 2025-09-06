@@ -44,7 +44,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
   return (
     <div className="min-h-screen bg-[#f5f0e1]">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-black mb-2">Edit Post</h1>
             <p className="text-black">Update your post content and settings</p>
