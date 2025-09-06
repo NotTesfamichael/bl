@@ -34,51 +34,54 @@ export function PostCard({ post }: PostCardProps) {
   const likeCount = post.reactions.filter((r) => r.type === "LIKE").length;
 
   return (
-    <Card className="h-full hover:shadow-lg transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <h2 className="text-xl font-semibold line-clamp-2 text-black">
-            <Link
-              href={`/p/${post.slug}`}
-              className="hover:text-[#556B2F] transition-colors"
-            >
+    <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer hover:scale-[1.02] transition-transform group">
+      <Link href={`/p/${post.slug}`} className="block h-full">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <h2 className="text-xl font-semibold line-clamp-2 text-black group-hover:text-[#556b2f] transition-colors">
               {post.title}
-            </Link>
-          </h2>
-          <div className="flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
-            <Eye className="h-4 w-4" />
-            <span>{viewCount}</span>
-            <Heart className="h-4 w-4" />
-            <span>{likeCount}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          <span>By {post.author.name}</span>
-          {post.publishedAt && (
-            <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              <span>
-                {formatDistanceToNow(new Date(post.publishedAt), {
-                  addSuffix: true
-                })}
-              </span>
+            </h2>
+            <div className="flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
+              <Eye className="h-4 w-4" />
+              <span>{viewCount}</span>
+              <Heart className="h-4 w-4" />
+              <span>{likeCount}</span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <span>By {post.author.name}</span>
+            {post.publishedAt && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {formatDistanceToNow(new Date(post.publishedAt), {
+                    addSuffix: true
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {post.excerpt && (
+            <p className="text-black mb-4 line-clamp-3">{post.excerpt}</p>
           )}
-        </div>
-      </CardHeader>
+        </CardContent>
+      </Link>
 
-      <CardContent>
-        {post.excerpt && (
-          <p className="text-black mb-4 line-clamp-3">{post.excerpt}</p>
-        )}
-
+      <CardContent className="pt-0">
         <div className="flex flex-wrap gap-2">
           {post.tags.map(({ tag }) => (
-            <Link key={tag.slug} href={`/tags/${tag.slug}`}>
+            <Link
+              key={tag.slug}
+              href={`/tags/${tag.slug}`}
+              className="inline-block"
+            >
               <Badge
                 variant="secondary"
-                className="hover:bg-[#556B2F] hover:text-white"
+                className="hover:bg-[#556b2f] hover:text-white"
               >
                 {tag.name}
               </Badge>

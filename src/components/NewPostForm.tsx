@@ -18,14 +18,42 @@ interface Tag {
   slug: string;
 }
 
-export function NewPostForm() {
+interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  contentMarkdown: string;
+  status: "DRAFT" | "PUBLISHED";
+  tags: Array<{
+    tag: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }>;
+}
+
+interface NewPostFormProps {
+  post?: Post;
+  allTags?: Tag[];
+  isEditing?: boolean;
+}
+
+export function NewPostForm({
+  post,
+  allTags = [],
+  isEditing = false
+}: NewPostFormProps) {
   const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState("");
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [title, setTitle] = useState(post?.title || "");
+  const [slug, setSlug] = useState(post?.slug || "");
+  const [excerpt, setExcerpt] = useState(post?.excerpt || "");
+  const [content, setContent] = useState(post?.contentMarkdown || "");
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(
+    post?.tags?.map(({ tag }) => tag) || []
+  );
+  const [availableTags, setAvailableTags] = useState<Tag[]>(allTags);
   const [isPreview, setIsPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -41,27 +69,44 @@ export function NewPostForm() {
     if (!title || !content) return;
 
     try {
-      const response = await fetch("/api/posts", {
-        method: "POST",
+      const url = isEditing ? `/api/posts/${post?.id}` : "/api/posts";
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           slug: slug || generateSlug(title),
           contentMarkdown: content,
           excerpt,
+          status: "DRAFT",
           tagIds: selectedTags.map((tag) => tag.id)
         })
       });
 
       if (response.ok) {
-        const post = await response.json();
-        toast.success("Draft saved");
-        return post;
+        const postData = await response.json();
+        toast.success(isEditing ? "Post updated successfully!" : "Draft saved");
+        if (!isEditing) {
+          router.push("/writer");
+        }
+        return postData;
       }
     } catch (error) {
       console.error("Failed to save draft:", error);
+      toast.error("Failed to save draft");
     }
-  }, [title, content, slug, excerpt, selectedTags]);
+  }, [
+    title,
+    content,
+    slug,
+    excerpt,
+    selectedTags,
+    isEditing,
+    post?.id,
+    router
+  ]);
 
   // Load available tags
   useEffect(() => {
@@ -90,8 +135,11 @@ export function NewPostForm() {
 
     setIsPublishing(true);
     try {
-      const response = await fetch("/api/posts", {
-        method: "POST",
+      const url = isEditing ? `/api/posts/${post?.id}` : "/api/posts";
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
@@ -104,9 +152,13 @@ export function NewPostForm() {
       });
 
       if (response.ok) {
-        const post = await response.json();
-        toast.success("Post published successfully!");
-        router.push(`/p/${post.slug}`);
+        const postData = await response.json();
+        toast.success(
+          isEditing
+            ? "Post updated and published!"
+            : "Post published successfully!"
+        );
+        router.push(`/p/${postData.slug}`);
       } else {
         const error = await response.json();
         toast.error(error.message || "Failed to publish post");

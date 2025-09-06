@@ -8,6 +8,41 @@ import { Plus, Edit, Eye, Calendar, Clock, Heart } from "lucide-react";
 import Link from "next/link";
 // // import { QuickActions } from "@/components/QuickActions";
 import { PostAnalytics } from "@/components/PostAnalytics";
+import { DeletePostButton } from "@/components/DeletePostButton";
+
+async function deletePost(postId: string) {
+  "use server";
+
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    // Verify the post belongs to the user
+    const post = await db.post.findFirst({
+      where: {
+        id: postId,
+        authorId: session.user.id
+      }
+    });
+
+    if (!post) {
+      console.error("Post not found:", postId);
+      return { error: "Post not found" };
+    }
+
+    // Delete the post (this will cascade delete related records)
+    await db.post.delete({
+      where: { id: postId }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    return { error: "Failed to delete post" };
+  }
+}
 
 export default async function WriterPage() {
   const session = await auth();
@@ -182,6 +217,11 @@ export default async function WriterPage() {
                           View
                         </Link>
                       </Button>
+                      <DeletePostButton
+                        postId={post.id}
+                        postTitle={post.title}
+                        onDelete={deletePost}
+                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -239,6 +279,11 @@ export default async function WriterPage() {
                           Continue Editing
                         </Link>
                       </Button>
+                      <DeletePostButton
+                        postId={post.id}
+                        postTitle={post.title || "Untitled Draft"}
+                        onDelete={deletePost}
+                      />
                     </div>
                   </CardContent>
                 </Card>

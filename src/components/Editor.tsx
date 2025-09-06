@@ -4,7 +4,6 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { createLowlight } from "lowlight";
 import { EditorToolbar } from "./EditorToolbar";
@@ -26,7 +25,13 @@ export function Editor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        codeBlock: false // We'll use CodeBlockLowlight instead
+        codeBlock: false, // We'll use CodeBlockLowlight instead
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: "text-blue-600 hover:text-blue-800 underline"
+          }
+        }
       }),
       CodeBlockLowlight.configure({
         lowlight: createLowlight(),
@@ -35,12 +40,6 @@ export function Editor({
       Image.configure({
         HTMLAttributes: {
           class: "rounded-lg max-w-full h-auto"
-        }
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: "text-blue-600 hover:text-blue-800 underline"
         }
       }),
       Placeholder.configure({
