@@ -279,12 +279,12 @@ export default async function WriterPage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         asChild
-                        className="w-full h-9 sm:flex-none"
+                        className="w-full h-9"
                       >
                         <Link href={`/writer/${post.id}`}>
                           <Edit className="h-4 w-4 mr-1" />
@@ -295,21 +295,21 @@ export default async function WriterPage() {
                         variant="outline"
                         size="sm"
                         asChild
-                        className="w-full h-9 sm:flex-none"
+                        className="w-full h-9"
                       >
                         <Link href={`/p/${post.slug}`}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Link>
                       </Button>
-                      <div className="w-full sm:flex-none">
+                      <div className="w-full">
                         <UnpublishPostButton
                           postId={post.id}
                           postTitle={post.title}
                           onUnpublish={unpublishPost}
                         />
                       </div>
-                      <div className="w-full sm:flex-none">
+                      <div className="w-full">
                         <DeletePostButton
                           postId={post.id}
                           postTitle={post.title}
@@ -366,12 +366,12 @@ export default async function WriterPage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         asChild
-                        className="w-full h-9 sm:flex-none"
+                        className="w-full h-9"
                       >
                         <Link href={`/writer/${post.id}`}>
                           <Edit className="h-4 w-4 mr-1" />
@@ -381,7 +381,7 @@ export default async function WriterPage() {
                           <span className="sm:hidden">Edit</span>
                         </Link>
                       </Button>
-                      <div className="w-full sm:flex-none">
+                      <div className="w-full">
                         <DeletePostButton
                           postId={post.id}
                           postTitle={post.title || "Untitled Draft"}
