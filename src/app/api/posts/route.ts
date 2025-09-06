@@ -1,0 +1,158 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import {
+  compileMarkdownToHtml,
+  generateExcerpt,
+  generateSlug
+} from "@/lib/markdown";
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      title,
+      slug,
+      contentMarkdown,
+      excerpt,
+      tagIds = [],
+      status = "DRAFT"
+    } = body;
+
+    if (!title || !contentMarkdown) {
+      return NextResponse.json(
+        { error: "Title and content are required" },
+        { status: 400 }
+      );
+    }
+
+    // Generate slug if not provided
+    const finalSlug = slug || generateSlug(title);
+
+    // Ensure slug is unique
+    let uniqueSlug = finalSlug;
+    let counter = 1;
+    while (await db.post.findUnique({ where: { slug: uniqueSlug } })) {
+      uniqueSlug = `${finalSlug}-${counter}`;
+      counter++;
+    }
+
+    // Compile markdown to HTML
+    const contentHtml = await compileMarkdownToHtml(contentMarkdown);
+    const finalExcerpt = excerpt || generateExcerpt(contentMarkdown);
+
+    // Create post
+    const post = await db.post.create({
+      data: {
+        title,
+        slug: uniqueSlug,
+        contentMarkdown,
+        contentHtml,
+        excerpt: finalExcerpt,
+        status,
+        authorId: session.user.id,
+        publishedAt: status === "PUBLISHED" ? new Date() : null,
+        tags: {
+          create: tagIds.map((tagId: string) => ({
+            tagId
+          }))
+        }
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(post);
+  } catch (error) {
+    console.error("Error creating post:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search");
+    const tag = searchParams.get("tag");
+    const status = searchParams.get("status") || "PUBLISHED";
+
+    const where: Record<string, unknown> = { status };
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { excerpt: { contains: search, mode: "insensitive" } },
+        { contentMarkdown: { contains: search, mode: "insensitive" } }
+      ];
+    }
+
+    if (tag) {
+      where.tags = {
+        some: {
+          tag: {
+            slug: tag
+          }
+        }
+      };
+    }
+
+    const [posts, total] = await Promise.all([
+      db.post.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              name: true,
+              image: true
+            }
+          },
+          tags: {
+            include: {
+              tag: true
+            }
+          },
+          views: true,
+          reactions: true
+        },
+        orderBy: {
+          publishedAt: "desc"
+        },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      db.post.count({ where })
+    ]);
+
+    return NextResponse.json({
+      posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
