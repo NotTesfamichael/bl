@@ -183,3 +183,34 @@
 .prose th {
   @apply bg-gray-100 font-semibold;
 }
+
+.prose img {
+  @apply max-w-full h-auto rounded-lg shadow-sm my-4;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose figure {
+  @apply my-6;
+}
+
+.prose figcaption {
+  @apply text-sm text-gray-600 text-center mt-2 italic;
+}
+
+/* Editor-specific image styles */
+.ProseMirror img {
+  @apply max-w-full h-auto rounded-lg shadow-sm my-4;
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.ProseMirror figure {
+  @apply my-6;
+}
+
+.ProseMirror figcaption {
+  @apply text-sm text-gray-600 text-center mt-2 italic;
+}

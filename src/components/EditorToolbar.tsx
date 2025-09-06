@@ -2,6 +2,17 @@
 
 import { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
 import {
   Bold,
   Italic,
@@ -25,27 +36,49 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useState } from "react";
 
 interface EditorToolbarProps {
   editor: Editor;
 }
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkText, setLinkText] = useState("");
+
   if (!editor) {
     return null;
   }
 
-  const addImage = () => {
-    const url = window.prompt("Enter image URL:");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const handleAddImage = () => {
+    if (imageUrl.trim()) {
+      editor
+        .chain()
+        .focus()
+        .setImage({ src: imageUrl.trim(), alt: "Image" })
+        .run();
+      setImageUrl("");
+      setImageDialogOpen(false);
     }
   };
 
-  const setLink = () => {
-    const url = window.prompt("Enter URL:");
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
+  const handleSetLink = () => {
+    if (linkUrl.trim()) {
+      if (linkText.trim()) {
+        editor
+          .chain()
+          .focus()
+          .insertContent(`<a href="${linkUrl.trim()}">${linkText.trim()}</a>`)
+          .run();
+      } else {
+        editor.chain().focus().setLink({ href: linkUrl.trim() }).run();
+      }
+      setLinkUrl("");
+      setLinkText("");
+      setLinkDialogOpen(false);
     }
   };
 
@@ -178,17 +211,105 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
       <div className="w-px h-6 bg-gray-200 mx-1" />
 
       {/* Links and media */}
-      <Button
-        variant={editor.isActive("link") ? "default" : "ghost"}
-        size="sm"
-        onClick={setLink}
-      >
-        <Link className="h-4 w-4" />
-      </Button>
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant={editor.isActive("link") ? "default" : "ghost"}
+            size="sm"
+          >
+            <Link className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Link</DialogTitle>
+            <DialogDescription>
+              Enter the URL and optional text for your link.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="link-url">URL</Label>
+              <Input
+                id="link-url"
+                placeholder="https://example.com"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSetLink()}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="link-text">Link Text (optional)</Label>
+              <Input
+                id="link-text"
+                placeholder="Click here"
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSetLink()}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSetLink} disabled={!linkUrl.trim()}>
+              Add Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Button variant="ghost" size="sm" onClick={addImage}>
-        <Image className="h-4 w-4" />
-      </Button>
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="sm">
+            <Image className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Image</DialogTitle>
+            <DialogDescription>
+              Enter the URL of the image you want to add.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="image-url">Image URL</Label>
+              <Input
+                id="image-url"
+                placeholder="https://example.com/image.jpg"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddImage()}
+              />
+            </div>
+            {imageUrl && (
+              <div className="grid gap-2">
+                <Label>Preview</Label>
+                <div className="border rounded-lg p-4 flex justify-center">
+                  <img
+                    src={imageUrl}
+                    alt="Preview"
+                    className="max-w-full h-auto max-h-48 rounded"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImageDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddImage} disabled={!imageUrl.trim()}>
+              Add Image
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

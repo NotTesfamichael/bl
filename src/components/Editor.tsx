@@ -37,11 +37,7 @@ export function Editor({
         lowlight: createLowlight(),
         defaultLanguage: "javascript"
       }),
-      Image.configure({
-        HTMLAttributes: {
-          class: "rounded-lg max-w-full h-auto"
-        }
-      }),
+      Image,
       Placeholder.configure({
         placeholder
       })

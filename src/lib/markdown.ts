@@ -69,7 +69,51 @@ export async function compileMarkdownToHtml(markdown: string): Promise<string> {
     .data("settings", { fragment: true })
     // @ts-expect-error - rehype-pretty-code options type issue
     .use(rehypePrettyCode, options)
-    .use(rehypeSanitize)
+    .use(rehypeSanitize, {
+      tagNames: [
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "br",
+        "strong",
+        "em",
+        "u",
+        "s",
+        "del",
+        "ul",
+        "ol",
+        "li",
+        "blockquote",
+        "pre",
+        "code",
+        "a",
+        "img",
+        "figure",
+        "figcaption",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "th",
+        "td",
+        "div",
+        "span"
+      ],
+      attributes: {
+        "*": ["class", "id"],
+        a: ["href", "title", "target", "rel"],
+        img: ["src", "alt", "title", "width", "height", "loading", "class"],
+        figure: ["class"],
+        figcaption: ["class"],
+        table: ["class"],
+        th: ["scope", "colspan", "rowspan"],
+        td: ["colspan", "rowspan"]
+      }
+    })
     .use(rehypeStringify)
     .process(result.toString());
 
