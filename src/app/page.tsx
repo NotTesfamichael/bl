@@ -1,7 +1,8 @@
 import { PostCard } from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Plus } from "lucide-react";
+import { SearchBar } from "@/components/SearchBar";
+import { Header } from "@/components/Header";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 
 async function getPosts() {
@@ -25,42 +26,13 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-[#F5F0E1]">
       {/* Header */}
-      <header className="bg-[#F5F0E1] border-b border-[#D4C4A8]">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-black">
-                <Link
-                  href="/"
-                  className="hover:text-[#556B2F] transition-colors"
-                >
-                  Notes & Code Blog
-                </Link>
-              </h1>
-              <p className="text-black">
-                Share your thoughts and code with the world
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/writer">
-                <Button variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Write
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {/* Search */}
         <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-            <Input placeholder="Search posts..." className="pl-10" />
-          </div>
+          <SearchBar />
         </div>
 
         {/* Posts Grid */}

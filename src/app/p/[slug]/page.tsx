@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PostActions } from "@/components/PostActions";
 import { Calendar, Clock, Eye, Heart, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -14,6 +15,11 @@ interface PostPageProps {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
+
+  // Get current user session
+  const { auth } = await import("@/lib/auth");
+  const session = await auth();
+
   const post = await db.post.findUnique({
     where: {
       slug,
@@ -42,6 +48,11 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const viewCount = post.views[0]?.count || 0;
   const likeCount = post.reactions.filter((r) => r.type === "LIKE").length;
+  const isLiked = session?.user
+    ? post.reactions.some(
+        (r) => r.userId === session.user.id && r.type === "LIKE"
+      )
+    : false;
 
   return (
     <div className="min-h-screen bg-[#F5F0E1]">
@@ -113,15 +124,11 @@ export default async function PostPage({ params }: PostPageProps) {
           {/* Post Footer */}
           <footer className="mt-12 pt-8 border-t">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="outline" size="sm">
-                  <Heart className="h-4 w-4 mr-1" />
-                  Like
-                </Button>
-                <Button variant="outline" size="sm">
-                  Share
-                </Button>
-              </div>
+              <PostActions
+                postId={post.id}
+                initialLikeCount={likeCount}
+                isLiked={isLiked}
+              />
               <div className="text-sm text-gray-500">
                 Last updated{" "}
                 {formatDistanceToNow(new Date(post.updatedAt), {

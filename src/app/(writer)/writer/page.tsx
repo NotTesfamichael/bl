@@ -4,11 +4,23 @@ import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Eye, Calendar, Clock, Heart } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Eye,
+  Calendar,
+  Clock,
+  Heart,
+  Trash2,
+  Home,
+  LogOut,
+  EyeOff
+} from "lucide-react";
 import Link from "next/link";
 // // import { QuickActions } from "@/components/QuickActions";
 import { PostAnalytics } from "@/components/PostAnalytics";
 import { DeletePostButton } from "@/components/DeletePostButton";
+import { UnpublishPostButton } from "@/components/UnpublishPostButton";
 
 async function deletePost(postId: string) {
   "use server";
@@ -41,6 +53,45 @@ async function deletePost(postId: string) {
   } catch (error) {
     console.error("Error deleting post:", error);
     return { error: "Failed to delete post" };
+  }
+}
+
+async function unpublishPost(postId: string) {
+  "use server";
+
+  const session = await auth();
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    // Verify the post belongs to the user and is published
+    const post = await db.post.findFirst({
+      where: {
+        id: postId,
+        authorId: session.user.id,
+        status: "PUBLISHED"
+      }
+    });
+
+    if (!post) {
+      console.error("Published post not found:", postId);
+      return { error: "Published post not found" };
+    }
+
+    // Unpublish the post
+    await db.post.update({
+      where: { id: postId },
+      data: {
+        status: "DRAFT",
+        publishedAt: null
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error unpublishing post:", error);
+    return { error: "Failed to unpublish post" };
   }
 }
 
@@ -91,10 +142,22 @@ export default async function WriterPage() {
             <p className="text-black">Manage your posts and drafts</p>
           </div>
           <div className="flex items-center gap-4">
+            <Button variant="outline" asChild>
+              <Link href="/">
+                <Home className="h-4 w-4 mr-2" />
+                Back to Home
+              </Link>
+            </Button>
             <Button asChild>
               <Link href="/writer/new">
                 <Plus className="h-4 w-4 mr-2" />
                 New Post
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/logout">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
               </Link>
             </Button>
           </div>
@@ -217,6 +280,11 @@ export default async function WriterPage() {
                           View
                         </Link>
                       </Button>
+                      <UnpublishPostButton
+                        postId={post.id}
+                        postTitle={post.title}
+                        onUnpublish={unpublishPost}
+                      />
                       <DeletePostButton
                         postId={post.id}
                         postTitle={post.title}
