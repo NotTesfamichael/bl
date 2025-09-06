@@ -38,23 +38,23 @@ export function PostCard({ post }: PostCardProps) {
     <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer hover:scale-[1.02] transition-transform group">
       <Link href={`/p/${post.slug}`} className="block h-full">
         <CardHeader>
-          <div className="flex items-start justify-between gap-4">
-            <h2 className="text-xl font-semibold line-clamp-2 text-black group-hover:text-[#556b2f] transition-colors">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+            <h2 className="text-lg sm:text-xl font-semibold line-clamp-2 text-black group-hover:text-[#556b2f] transition-colors">
               {post.title}
             </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-600 flex-shrink-0">
-              <Eye className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 flex-shrink-0">
+              <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>{viewCount}</span>
-              <Heart className="h-4 w-4" />
+              <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>{likeCount}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
             <span>By {post.author.name}</span>
             {post.publishedAt && (
               <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>
                   {formatDistanceToNow(new Date(post.publishedAt), {
                     addSuffix: true

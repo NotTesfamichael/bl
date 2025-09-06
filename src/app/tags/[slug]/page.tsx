@@ -59,16 +59,16 @@ export default async function TagPage({ params }: TagPageProps) {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <Tag className="h-8 w-8 text-[#556B2F]" />
-            <h1 className="text-4xl font-bold text-black">
+            <Tag className="h-6 w-6 sm:h-8 sm:w-8 text-[#556B2F]" />
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">
               Posts tagged with "{tag.name}"
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="default" className="bg-[#556B2F] text-white">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Badge variant="default" className="bg-[#556B2F] text-white w-fit">
               {tag.name}
             </Badge>
-            <span className="text-gray-600">
+            <span className="text-sm sm:text-base text-gray-600">
               {posts.length} {posts.length === 1 ? "post" : "posts"}
             </span>
           </div>

@@ -60,18 +60,25 @@ export default async function PostPage({ params }: PostPageProps) {
       {/* Header */}
       <header className="border-b border-[#D4C4A8]">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <Link href="/">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="w-full sm:w-auto">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Back</span>
               </Button>
             </Link>
             {session?.user && session.user.id === post.author.id && (
-              <Button asChild variant="outline" size="sm">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+              >
                 <Link href={`/writer/${post.id}`}>
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Post
+                  <span className="hidden sm:inline">Edit Post</span>
+                  <span className="sm:hidden">Edit</span>
                 </Link>
               </Button>
             )}
@@ -84,27 +91,28 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="max-w-4xl mx-auto">
           {/* Post Header */}
           <header className="mb-8">
-            <div className="flex items-start justify-between mb-4">
-              <h1 className="text-4xl font-bold text-black flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black flex-1">
                 {post.title}
               </h1>
               {session?.user && session.user.id === post.author.id && (
-                <Button asChild className="ml-4">
+                <Button asChild className="w-full sm:w-auto">
                   <Link href={`/writer/${post.id}`}>
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit Post
+                    <span className="hidden sm:inline">Edit Post</span>
+                    <span className="sm:hidden">Edit</span>
                   </Link>
                 </Button>
               )}
             </div>
 
-            <div className="flex items-center gap-6 text-sm text-gray-600 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-xs sm:text-sm text-gray-600 mb-6">
               <div className="flex items-center gap-2">
                 <span>By {post.author.name}</span>
               </div>
               {post.publishedAt && (
                 <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>
                     {formatDistanceToNow(new Date(post.publishedAt), {
                       addSuffix: true
@@ -113,15 +121,15 @@ export default async function PostPage({ params }: PostPageProps) {
                 </div>
               )}
               <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>5 min read</span>
               </div>
               <div className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
+                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>{viewCount} views</span>
               </div>
               <div className="flex items-center gap-1">
-                <Heart className="h-4 w-4" />
+                <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>{likeCount} likes</span>
               </div>
             </div>
@@ -146,13 +154,13 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Post Footer */}
           <footer className="mt-12 pt-8 border-t">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <PostActions
                 postId={post.id}
                 initialLikeCount={likeCount}
                 isLiked={isLiked}
               />
-              <div className="text-sm text-gray-500">
+              <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-right">
                 Last updated{" "}
                 {formatDistanceToNow(new Date(post.updatedAt), {
                   addSuffix: true

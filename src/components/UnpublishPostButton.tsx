@@ -57,7 +57,7 @@ export function UnpublishPostButton({
         <Button
           variant="outline"
           size="sm"
-          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+          className="w-full h-9 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
         >
           <EyeOff className="h-4 w-4 mr-1" />
           Unpublish

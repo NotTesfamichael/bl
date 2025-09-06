@@ -136,25 +136,29 @@ export default async function WriterPage() {
   return (
     <div className="min-h-screen bg-[#F5F0E1]">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-black">Writer Dashboard</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-black">
+              Writer Dashboard
+            </h1>
             <p className="text-black">Manage your posts and drafts</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="outline" asChild>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/">
                 <Home className="h-4 w-4 mr-2" />
-                Back to Home
+                <span className="hidden sm:inline">Back to Home</span>
+                <span className="sm:hidden">Home</span>
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
               <Link href="/writer/new">
                 <Plus className="h-4 w-4 mr-2" />
-                New Post
+                <span className="hidden sm:inline">New Post</span>
+                <span className="sm:hidden">New</span>
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/logout">
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -164,18 +168,18 @@ export default async function WriterPage() {
         </div>
 
         {/* Statistics Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Eye className="h-6 w-6 text-blue-600" />
+                  <Eye className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
+                <div className="ml-3 md:ml-4">
+                  <p className="text-xs md:text-sm font-medium text-gray-600">
                     Total Views
                   </p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-lg md:text-2xl font-bold">
                     {totalViews.toLocaleString()}
                   </p>
                 </div>
@@ -184,44 +188,52 @@ export default async function WriterPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <Heart className="h-6 w-6 text-green-600" />
+                  <Heart className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">
+                <div className="ml-3 md:ml-4">
+                  <p className="text-xs md:text-sm font-medium text-gray-600">
                     Total Likes
                   </p>
-                  <p className="text-2xl font-bold">{totalLikes}</p>
+                  <p className="text-lg md:text-2xl font-bold">{totalLikes}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-purple-100 rounded-lg">
-                  <Calendar className="h-6 w-6 text-purple-600" />
+                  <Calendar className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Published</p>
-                  <p className="text-2xl font-bold">{publishedPosts.length}</p>
+                <div className="ml-3 md:ml-4">
+                  <p className="text-xs md:text-sm font-medium text-gray-600">
+                    Published
+                  </p>
+                  <p className="text-lg md:text-2xl font-bold">
+                    {publishedPosts.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center">
                 <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-orange-600" />
+                  <Clock className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Drafts</p>
-                  <p className="text-2xl font-bold">{draftPosts.length}</p>
+                <div className="ml-3 md:ml-4">
+                  <p className="text-xs md:text-sm font-medium text-gray-600">
+                    Drafts
+                  </p>
+                  <p className="text-lg md:text-2xl font-bold">
+                    {draftPosts.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -267,29 +279,43 @@ export default async function WriterPage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" asChild>
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="w-full h-9 sm:flex-none"
+                      >
                         <Link href={`/writer/${post.id}`}>
                           <Edit className="h-4 w-4 mr-1" />
                           Edit
                         </Link>
                       </Button>
-                      <Button variant="outline" size="sm" asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="w-full h-9 sm:flex-none"
+                      >
                         <Link href={`/p/${post.slug}`}>
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Link>
                       </Button>
-                      <UnpublishPostButton
-                        postId={post.id}
-                        postTitle={post.title}
-                        onUnpublish={unpublishPost}
-                      />
-                      <DeletePostButton
-                        postId={post.id}
-                        postTitle={post.title}
-                        onDelete={deletePost}
-                      />
+                      <div className="w-full sm:flex-none">
+                        <UnpublishPostButton
+                          postId={post.id}
+                          postTitle={post.title}
+                          onUnpublish={unpublishPost}
+                        />
+                      </div>
+                      <div className="w-full sm:flex-none">
+                        <DeletePostButton
+                          postId={post.id}
+                          postTitle={post.title}
+                          onDelete={deletePost}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -340,18 +366,28 @@ export default async function WriterPage() {
                         {post.excerpt}
                       </p>
                     )}
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" asChild>
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="w-full h-9 sm:flex-none"
+                      >
                         <Link href={`/writer/${post.id}`}>
                           <Edit className="h-4 w-4 mr-1" />
-                          Continue Editing
+                          <span className="hidden sm:inline">
+                            Continue Editing
+                          </span>
+                          <span className="sm:hidden">Edit</span>
                         </Link>
                       </Button>
-                      <DeletePostButton
-                        postId={post.id}
-                        postTitle={post.title || "Untitled Draft"}
-                        onDelete={deletePost}
-                      />
+                      <div className="w-full sm:flex-none">
+                        <DeletePostButton
+                          postId={post.id}
+                          postTitle={post.title || "Untitled Draft"}
+                          onDelete={deletePost}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

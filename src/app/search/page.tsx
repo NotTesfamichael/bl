@@ -46,10 +46,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <div className="min-h-screen bg-[#F5F0E1]">
       {/* Header */}
       <header className="bg-[#F5F0E1] border-b border-[#D4C4A8]">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-black">
+              <h1 className="text-2xl sm:text-3xl font-bold text-black">
                 <Link
                   href="/"
                   className="hover:text-[#556B2F] transition-colors"
@@ -57,19 +57,23 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   Notes & Code Blog
                 </Link>
               </h1>
-              <p className="text-black">Search results for "{query}"</p>
+              <p className="text-black text-sm sm:text-base">
+                Search results for "{query}"
+              </p>
             </div>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" asChild>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link href="/">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Home
+                  <span className="hidden sm:inline">Back to Home</span>
+                  <span className="sm:hidden">Back</span>
                 </Link>
               </Button>
-              <Link href="/writer">
-                <Button variant="outline">
+              <Link href="/writer" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
-                  Write
+                  <span className="hidden sm:inline">Write</span>
+                  <span className="sm:hidden">Write</span>
                 </Button>
               </Link>
             </div>

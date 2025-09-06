@@ -82,28 +82,43 @@ export function PostActions({
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-4">
       <Button
         variant="outline"
         size="sm"
         onClick={handleLike}
         disabled={isLiking}
-        className={isLikedState ? "text-red-600 border-red-600" : ""}
+        className={`flex-1 sm:flex-none ${
+          isLikedState ? "text-red-600 border-red-600" : ""
+        }`}
       >
         <Heart
           className={`h-4 w-4 mr-1 ${isLikedState ? "fill-current" : ""}`}
         />
-        {likeCount} {likeCount === 1 ? "Like" : "Likes"}
+        <span className="hidden sm:inline">
+          {likeCount} {likeCount === 1 ? "Like" : "Likes"}
+        </span>
+        <span className="sm:hidden">{likeCount}</span>
       </Button>
 
-      <Button variant="outline" size="sm" onClick={handleComment}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleComment}
+        className="flex-1 sm:flex-none"
+      >
         <MessageCircle className="h-4 w-4 mr-1" />
-        Comment
+        <span className="hidden sm:inline">Comment</span>
       </Button>
 
-      <Button variant="outline" size="sm" onClick={handleShare}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleShare}
+        className="flex-1 sm:flex-none"
+      >
         <Share2 className="h-4 w-4 mr-1" />
-        Share
+        <span className="hidden sm:inline">Share</span>
       </Button>
     </div>
   );

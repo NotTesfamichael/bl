@@ -205,18 +205,19 @@ export function NewPostForm({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 lg:gap-6">
       {/* Main Editor */}
       <div className="lg:col-span-4">
         <Card className="h-full">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <CardTitle>Content</CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsPreview(!isPreview)}
+                  className="w-full sm:w-auto"
                 >
                   <Eye className="h-4 w-4 mr-1" />
                   {isPreview ? "Edit" : "Preview"}
@@ -226,6 +227,7 @@ export function NewPostForm({
                   size="sm"
                   onClick={handleSave}
                   disabled={isSaving}
+                  className="w-full sm:w-auto"
                 >
                   <Save className="h-4 w-4 mr-1" />
                   {isSaving ? "Saving..." : "Save Draft"}
@@ -233,6 +235,7 @@ export function NewPostForm({
                 <Button
                   onClick={handlePublish}
                   disabled={isPublishing || !title || !content}
+                  className="w-full sm:w-auto"
                 >
                   <Globe className="h-4 w-4 mr-1" />
                   {isPublishing ? "Publishing..." : "Publish"}
@@ -243,7 +246,7 @@ export function NewPostForm({
           <CardContent className="flex-1">
             {isPreview ? (
               <div
-                className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-6"
+                className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-4 sm:p-6"
                 dangerouslySetInnerHTML={{ __html: content }}
               />
             ) : (
