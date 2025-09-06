@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Editor } from "./Editor";
+import { TagInput } from "./TagInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Save, Eye, Globe, X } from "lucide-react";
+import { Save, Eye, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { generateSlug } from "@/lib/markdown";
 
@@ -88,6 +88,14 @@ export function NewPostForm({
       if (response.ok) {
         const postData = await response.json();
         toast.success(isEditing ? "Post updated successfully!" : "Draft saved");
+
+        // Clean up unused tags after saving
+        try {
+          await fetch("/api/tags/cleanup", { method: "POST" });
+        } catch (error) {
+          console.error("Failed to cleanup unused tags:", error);
+        }
+
         if (!isEditing) {
           router.push("/writer");
         }
@@ -158,6 +166,14 @@ export function NewPostForm({
             ? "Post updated and published!"
             : "Post published successfully!"
         );
+
+        // Clean up unused tags after publishing
+        try {
+          await fetch("/api/tags/cleanup", { method: "POST" });
+        } catch (error) {
+          console.error("Failed to cleanup unused tags:", error);
+        }
+
         router.push(`/p/${postData.slug}`);
       } else {
         const error = await response.json();
@@ -180,14 +196,12 @@ export function NewPostForm({
     }
   };
 
-  const addTag = (tag: Tag) => {
-    if (!selectedTags.find((t) => t.id === tag.id)) {
-      setSelectedTags([...selectedTags, tag]);
-    }
+  const handleTagsChange = (tags: Tag[]) => {
+    setSelectedTags(tags);
   };
 
-  const removeTag = (tagId: string) => {
-    setSelectedTags(selectedTags.filter((t) => t.id !== tagId));
+  const handleAvailableTagsChange = (tags: Tag[]) => {
+    setAvailableTags(tags);
   };
 
   return (
@@ -292,42 +306,13 @@ export function NewPostForm({
           <CardHeader>
             <CardTitle>Tags</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Add Tags</label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {availableTags.map((tag) => (
-                  <Button
-                    key={tag.id}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addTag(tag)}
-                    disabled={selectedTags.some((t) => t.id === tag.id)}
-                  >
-                    {tag.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Selected Tags</label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedTags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {tag.name}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => removeTag(tag.id)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            </div>
+          <CardContent>
+            <TagInput
+              selectedTags={selectedTags}
+              onTagsChange={handleTagsChange}
+              availableTags={availableTags}
+              onAvailableTagsChange={handleAvailableTagsChange}
+            />
           </CardContent>
         </Card>
       </div>

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PostActions } from "@/components/PostActions";
-import { Calendar, Clock, Eye, Heart, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, Eye, Heart, ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -28,6 +28,7 @@ export default async function PostPage({ params }: PostPageProps) {
     include: {
       author: {
         select: {
+          id: true,
           name: true,
           image: true
         }
@@ -59,12 +60,22 @@ export default async function PostPage({ params }: PostPageProps) {
       {/* Header */}
       <header className="border-b border-[#D4C4A8]">
         <div className="container mx-auto px-4 py-4">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link href="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+            {session?.user && session.user.id === post.author.id && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/writer/${post.id}`}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Post
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -73,7 +84,19 @@ export default async function PostPage({ params }: PostPageProps) {
         <div className="max-w-4xl mx-auto">
           {/* Post Header */}
           <header className="mb-8">
-            <h1 className="text-4xl font-bold text-black mb-4">{post.title}</h1>
+            <div className="flex items-start justify-between mb-4">
+              <h1 className="text-4xl font-bold text-black flex-1">
+                {post.title}
+              </h1>
+              {session?.user && session.user.id === post.author.id && (
+                <Button asChild className="ml-4">
+                  <Link href={`/writer/${post.id}`}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Post
+                  </Link>
+                </Button>
+              )}
+            </div>
 
             <div className="flex items-center gap-6 text-sm text-gray-600 mb-6">
               <div className="flex items-center gap-2">

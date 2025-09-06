@@ -20,18 +20,19 @@ interface PostCardProps {
         slug: string;
       };
     }>;
-    views: Array<{
+    views?: Array<{
       count: number;
     }>;
-    reactions: Array<{
+    reactions?: Array<{
       type: string;
     }>;
   };
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const viewCount = post.views[0]?.count || 0;
-  const likeCount = post.reactions.filter((r) => r.type === "LIKE").length;
+  const viewCount = post.views?.[0]?.count || 0;
+  const likeCount =
+    post.reactions?.filter((r) => r.type === "LIKE").length || 0;
 
   return (
     <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer hover:scale-[1.02] transition-transform group">
