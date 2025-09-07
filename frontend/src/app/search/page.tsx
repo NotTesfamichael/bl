@@ -73,7 +73,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   href="/"
                   className="hover:text-[#556B2F] transition-colors"
                 >
-                  Notes & Code Blog
+                  Kiyadur
                 </Link>
               </h1>
               <p className="text-black text-sm sm:text-base">

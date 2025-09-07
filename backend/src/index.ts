@@ -78,7 +78,7 @@ app.get("/health", (req, res) => {
     status: "healthy",
     database: "connected",
     timestamp: new Date().toISOString(),
-    service: "kiyadur-backend"
+    service: "Kiyadur-backend"
   });
 });
 

@@ -47,10 +47,14 @@ router.get("/", async (req, res) => {
               { authorId: decoded.userId }
             ];
           } else if (visibility === "PUBLIC") {
-            where.visibility = "PUBLIC";
+            // For "Public" view, show only user's own public posts
+            where.AND = [
+              { visibility: "PUBLIC" },
+              { authorId: decoded.userId }
+            ];
           }
         } else {
-          // Default behavior: only show PUBLIC posts (no private posts in "All Posts")
+          // Default behavior: show all PUBLIC posts (from all users)
           where.visibility = "PUBLIC";
         }
       } catch (error) {

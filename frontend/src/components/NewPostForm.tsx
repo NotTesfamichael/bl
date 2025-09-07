@@ -416,21 +416,23 @@ export function NewPostForm({
                     <span>Public - Everyone can see this post</span>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    id="private"
-                    name="visibility"
-                    value="PRIVATE"
-                    checked={visibility === "PRIVATE"}
-                    onChange={(e) => setVisibility(e.target.value as "PUBLIC" | "PRIVATE")}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  />
-                  <Label htmlFor="private" className="flex items-center space-x-2 cursor-pointer">
-                    <Lock className="h-4 w-4" />
-                    <span>Private - Only you can see this post</span>
-                  </Label>
-                </div>
+                {isAuthenticated && (
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="private"
+                      name="visibility"
+                      value="PRIVATE"
+                      checked={visibility === "PRIVATE"}
+                      onChange={(e) => setVisibility(e.target.value as "PUBLIC" | "PRIVATE")}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <Label htmlFor="private" className="flex items-center space-x-2 cursor-pointer">
+                      <Lock className="h-4 w-4" />
+                      <span>Private - Only you can see this post</span>
+                    </Label>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

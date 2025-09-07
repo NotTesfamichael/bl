@@ -124,11 +124,6 @@ export function SignInForm() {
           Google
         </Button>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Demo credentials: author@example.com / password123
-          </p>
-        </div>
       </CardContent>
     </Card>
   );

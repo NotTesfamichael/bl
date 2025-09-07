@@ -63,7 +63,7 @@ export function Header({ blogPostActions }: HeaderProps = {}) {
           <div className="flex items-center">
             <h1 className="text-xl sm:text-2xl font-bold text-black">
               <Link href="/" className="hover:text-[#556B2F] transition-colors">
-                kiyadur
+                Kiyadur
               </Link>
             </h1>
           </div>

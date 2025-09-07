@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "kiyadur",
+  title: "Kiyadur",
   description: "Share your thoughts and code with the world"
 };
 

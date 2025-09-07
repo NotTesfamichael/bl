@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
       status: "healthy",
       database: "connected",
       timestamp: new Date().toISOString(),
-      service: "kiyadur-backend"
+      service: "Kiyadur-backend"
     };
 
     res.json(health);
@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
       status: "unhealthy",
       database: "disconnected",
       timestamp: new Date().toISOString(),
-      service: "kiyadur-backend",
+      service: "Kiyadur-backend",
       error: error instanceof Error ? error.message : "Unknown error"
     };
 

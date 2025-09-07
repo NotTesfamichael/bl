@@ -135,7 +135,7 @@ export default function WriterPage() {
                   href="/"
                   className="hover:text-[#556B2F] transition-colors"
                 >
-                  kiyadur
+                  Kiyadur
                 </Link>
               </h1>
             </div>

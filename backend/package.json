@@ -1,5 +1,5 @@
 {
-  "name": "kiyadur-backend",
+  "name": "Kiyadur-backend",
   "version": "1.0.0",
   "description": "Backend API for Kiyadur blog platform",
   "main": "dist/index.js",

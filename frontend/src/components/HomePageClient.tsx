@@ -9,6 +9,7 @@ import { Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { apiClient } from "@/lib/api";
 import { Post } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HomePageClientProps {
   initialPosts: Post[];
@@ -22,6 +23,7 @@ export function HomePageClient({
   initialPosts,
   initialPagination
 }: HomePageClientProps) {
+  const { isAuthenticated } = useAuth();
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [pagination, setPagination] = useState(initialPagination);
   const [currentView, setCurrentView] = useState<"all" | "public" | "private">(
@@ -52,10 +54,7 @@ export function HomePageClient({
       } else if (view === "private") {
         params.visibility = "PRIVATE";
       }
-      // For "all", we explicitly set PUBLIC to only show public posts
-      if (view === "all") {
-        params.visibility = "PUBLIC";
-      }
+      // For "all", we don't set visibility - API will show all public posts
 
       if (search) {
         params.search = search;
@@ -72,6 +71,10 @@ export function HomePageClient({
   };
 
   const handleViewChange = (view: "all" | "public" | "private") => {
+    // Don't allow private view if not authenticated
+    if (view === "private" && !isAuthenticated) {
+      return;
+    }
     setCurrentView(view);
     fetchPosts(view, searchQuery);
   };
@@ -89,17 +92,18 @@ export function HomePageClient({
           <div className="flex-1">
             <SearchBar onSearch={handleSearch} />
           </div>
-          <VisibilityToggle
-            currentView={currentView}
+          <VisibilityToggle 
+            currentView={currentView} 
             onViewChange={handleViewChange}
             className="w-full sm:w-auto"
+            isAuthenticated={isAuthenticated}
           />
         </div>
 
         {/* View Description */}
         <div className="text-sm text-gray-600">
-          {currentView === "all" && "Showing all public posts"}
-          {currentView === "public" && "Showing only public posts"}
+          {currentView === "all" && "Showing all public posts from everyone"}
+          {currentView === "public" && "Showing only your public posts"}
           {currentView === "private" && "Showing only your private posts"}
         </div>
       </div>
@@ -134,8 +138,8 @@ export function HomePageClient({
             {currentView === "private"
               ? "Create your first private post to get started!"
               : currentView === "public"
-              ? "Be the first to share your thoughts publicly!"
-              : "Be the first to share your thoughts publicly!"}
+              ? "Create your first public post to get started!"
+              : "No public posts have been published yet!"}
           </p>
           <Link href="/writer">
             <Button>

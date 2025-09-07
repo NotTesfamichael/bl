@@ -9,12 +9,14 @@ interface VisibilityToggleProps {
   currentView: "all" | "public" | "private";
   onViewChange: (view: "all" | "public" | "private") => void;
   className?: string;
+  isAuthenticated?: boolean;
 }
 
 export function VisibilityToggle({
   currentView,
   onViewChange,
-  className
+  className,
+  isAuthenticated = false
 }: VisibilityToggleProps) {
   const views = [
     {
@@ -29,12 +31,13 @@ export function VisibilityToggle({
       icon: Globe,
       description: "Show only public posts"
     },
-    {
+    // Only show private option if user is authenticated
+    ...(isAuthenticated ? [{
       key: "private" as const,
       label: "Private",
       icon: Lock,
       description: "Show only private posts"
-    }
+    }] : [])
   ];
 
   return (
