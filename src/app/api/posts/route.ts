@@ -47,6 +47,20 @@ export async function POST(request: NextRequest) {
     const contentHtml = await compileMarkdownToHtml(contentMarkdown);
     const finalExcerpt = excerpt || generateExcerpt(contentMarkdown);
 
+    // Validate tag IDs if provided
+    let validTagIds: string[] = [];
+    if (tagIds && tagIds.length > 0) {
+      const existingTags = await db.tag.findMany({
+        where: { id: { in: tagIds } },
+        select: { id: true }
+      });
+      validTagIds = existingTags.map(tag => tag.id);
+      
+      if (validTagIds.length !== tagIds.length) {
+        console.log("Some tag IDs are invalid, using only valid ones:", validTagIds);
+      }
+    }
+
     // Create post
     const post = await db.post.create({
       data: {
@@ -58,11 +72,13 @@ export async function POST(request: NextRequest) {
         status,
         authorId: session.user.id,
         publishedAt: status === "PUBLISHED" ? new Date() : null,
-        tags: {
-          create: tagIds.map((tagId: string) => ({
-            tagId
-          }))
-        }
+        ...(validTagIds.length > 0 && {
+          tags: {
+            create: validTagIds.map((tagId: string) => ({
+              tagId
+            }))
+          }
+        })
       },
       include: {
         tags: {

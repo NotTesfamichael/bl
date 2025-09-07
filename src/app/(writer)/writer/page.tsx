@@ -1,6 +1,9 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+
+// Force dynamic rendering to ensure posts are always up-to-date
+export const dynamic = "force-dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -295,7 +298,7 @@ export default async function WriterPage() {
             </h2>
             <div className="space-y-4">
               {publishedPosts.map((post: PostWithRelations) => (
-                <Card key={post.id}>
+                <Card key={`published-${post.id}`}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -382,7 +385,7 @@ export default async function WriterPage() {
             </h2>
             <div className="space-y-4">
               {draftPosts.map((post: PostWithRelations) => (
-                <Card key={post.id}>
+                <Card key={`draft-${post.id}`}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

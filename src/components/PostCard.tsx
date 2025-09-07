@@ -75,9 +75,9 @@ export function PostCard({ post }: PostCardProps) {
 
       <CardContent className="pt-0">
         <div className="flex flex-wrap gap-2">
-          {post.tags.map(({ tag }: { tag: { name: string; slug: string } }) => (
+          {post.tags.map(({ tag }: { tag: { name: string; slug: string } }, index: number) => (
             <Link
-              key={tag.slug}
+              key={`${tag.slug}-${index}`}
               href={`/tags/${tag.slug}`}
               className="inline-block"
             >

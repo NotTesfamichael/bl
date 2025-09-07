@@ -58,6 +58,18 @@ export function TagInput({
     const tagName = inputValue.trim();
     if (!tagName) return;
 
+    // Check if tag is already selected
+    const isAlreadySelected = selectedTags.some(
+      (tag) => tag.name.toLowerCase() === tagName.toLowerCase()
+    );
+
+    if (isAlreadySelected) {
+      toast.info(`Tag "${tagName}" is already added to this post`);
+      setInputValue("");
+      setShowSuggestions(false);
+      return;
+    }
+
     // Check if tag already exists in available tags
     const existingTag = availableTags.find(
       (tag) => tag.name.toLowerCase() === tagName.toLowerCase()
@@ -83,6 +95,10 @@ export function TagInput({
         setInputValue("");
         setShowSuggestions(false);
         toast.success(`Tag "${newTag.name}" created successfully!`);
+      } else if (response.status === 401) {
+        toast.error("Please log in to create tags");
+        setInputValue("");
+        setShowSuggestions(false);
       } else if (response.status === 409) {
         // Tag already exists, try to find it and add it
         toast.info(`Tag "${tagName}" already exists, adding it to your post`);
@@ -107,7 +123,10 @@ export function TagInput({
         }
       } else {
         const error = await response.json();
+        console.error("Tag creation failed:", error);
         toast.error(error.error || "Failed to create tag");
+        setInputValue("");
+        setShowSuggestions(false);
       }
     } catch (error) {
       console.error("Error creating tag:", error);
@@ -118,6 +137,18 @@ export function TagInput({
   };
 
   const handleSelectTag = (tag: Tag) => {
+    // Check if tag is already selected
+    const isAlreadySelected = selectedTags.some(
+      (selectedTag) => selectedTag.id === tag.id
+    );
+
+    if (isAlreadySelected) {
+      toast.info(`Tag "${tag.name}" is already added to this post`);
+      setInputValue("");
+      setShowSuggestions(false);
+      return;
+    }
+
     onTagsChange([...selectedTags, tag]);
     setInputValue("");
     setShowSuggestions(false);

@@ -7,6 +7,9 @@ import { Calendar, Clock, Eye, Heart, ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
+// Force dynamic rendering to ensure posts are always up-to-date
+export const dynamic = "force-dynamic";
+
 interface PostPageProps {
   params: Promise<{
     slug: string;

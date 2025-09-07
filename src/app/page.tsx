@@ -6,6 +6,9 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 
+// Force dynamic rendering to ensure posts are always up-to-date
+export const dynamic = "force-dynamic";
+
 async function getPosts() {
   try {
     const posts = await db.post.findMany({
