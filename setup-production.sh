@@ -8,29 +8,28 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Function to prompt for credentials
-prompt_credentials() {
+# Function to prompt for admin credentials
+prompt_admin_credentials() {
     echo ""
-    echo "🔐 Please provide credentials for the default users:"
-    echo ""
-    
-    # Author credentials
-    read -p "Author email (default: author@example.com): " AUTHOR_EMAIL
-    AUTHOR_EMAIL=${AUTHOR_EMAIL:-author@example.com}
-    
-    read -s -p "Author password (default: password123): " AUTHOR_PASSWORD
-    AUTHOR_PASSWORD=${AUTHOR_PASSWORD:-password123}
+    echo "🔐 Please provide credentials for the admin user:"
     echo ""
     
     # Admin credentials
-    read -p "Admin email (default: admin@example.com): " ADMIN_EMAIL
-    ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+    read -p "Admin email: " ADMIN_EMAIL
+    while [ -z "$ADMIN_EMAIL" ]; do
+        echo "❌ Admin email is required"
+        read -p "Admin email: " ADMIN_EMAIL
+    done
     
-    read -s -p "Admin password (default: admin123): " ADMIN_PASSWORD
-    ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+    read -s -p "Admin password: " ADMIN_PASSWORD
+    while [ -z "$ADMIN_PASSWORD" ]; do
+        echo ""
+        echo "❌ Admin password is required"
+        read -s -p "Admin password: " ADMIN_PASSWORD
+    done
     echo ""
     
-    echo "✅ Credentials collected"
+    echo "✅ Admin credentials collected"
 }
 
 # Function to create secure .env file
@@ -40,8 +39,6 @@ create_secure_env() {
     # Create a temporary .env file with seed credentials
     cat > .env.seed << EOF
 # Seed credentials (temporary - will be removed after seeding)
-SEED_AUTHOR_EMAIL=${AUTHOR_EMAIL}
-SEED_AUTHOR_PASSWORD=${AUTHOR_PASSWORD}
 SEED_ADMIN_EMAIL=${ADMIN_EMAIL}
 SEED_ADMIN_PASSWORD=${ADMIN_PASSWORD}
 EOF
@@ -66,29 +63,27 @@ main() {
     echo "🗑️  Removing old database volumes..."
     docker volume rm notes-blog_postgres_data 2>/dev/null || true
 
-    # Prompt for credentials
-    prompt_credentials
+    # Prompt for admin credentials
+    prompt_admin_credentials
 
     # Create secure environment
     create_secure_env
 
     # Build and start services
     echo "🔨 Building and starting services..."
-    docker-compose --env-file .env.seed up -d --build
+    docker-compose --env-file .env --env-file .env.seed up -d --build
 
     # Wait for services to be healthy
     echo "⏳ Waiting for services to be ready..."
     sleep 15
 
-    # Run database migrations
-    echo "🗄️  Running database migrations..."
-    docker exec notes-blog-backend npx prisma migrate dev --name init
+    # Push database schema
+    echo "🗄️  Pushing database schema..."
+    docker exec notes-blog-backend npx prisma db push
 
     # Seed the database with secure credentials
     echo "🌱 Seeding database with provided credentials..."
-    docker exec -e SEED_AUTHOR_EMAIL="${AUTHOR_EMAIL}" \
-                -e SEED_AUTHOR_PASSWORD="${AUTHOR_PASSWORD}" \
-                -e SEED_ADMIN_EMAIL="${ADMIN_EMAIL}" \
+    docker exec -e SEED_ADMIN_EMAIL="${ADMIN_EMAIL}" \
                 -e SEED_ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
                 notes-blog-backend npm run db:seed
 
@@ -104,7 +99,6 @@ main() {
     echo "   Health Check: http://localhost:3001/api/health"
     echo ""
     echo "👥 Users Created:"
-    echo "   👤 Author: ${AUTHOR_EMAIL}"
     echo "   👑 Admin: ${ADMIN_EMAIL}"
     echo ""
     echo "🔒 Security Notes:"

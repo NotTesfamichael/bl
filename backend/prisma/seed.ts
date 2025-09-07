@@ -6,33 +6,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Starting database seeding...");
 
-  // Get user credentials from environment variables
-  const authorEmail = process.env.SEED_AUTHOR_EMAIL || "author@example.com";
-  const authorPassword = process.env.SEED_AUTHOR_PASSWORD || "password123";
+  // Get admin credentials from environment variables (required)
+  const adminEmail = process.env.SEED_ADMIN_EMAIL;
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
 
-  const existingAuthor = await prisma.user.findUnique({
-    where: { email: authorEmail }
-  });
-
-  if (!existingAuthor) {
-    const hashedAuthorPassword = await bcrypt.hash(authorPassword, 10);
-    const author = await prisma.user.create({
-      data: {
-        email: authorEmail,
-        password: hashedAuthorPassword,
-        name: "Test Author",
-        role: "AUTHOR"
-      }
-    });
-    console.log("✅ Author user created:", author.email);
-  } else {
-    console.log("ℹ️  Author user already exists:", existingAuthor.email);
+  if (!adminEmail || !adminPassword) {
+    console.error(
+      "❌ SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables are required"
+    );
+    process.exit(1);
   }
 
   // Create Admin User
-  const adminEmail = process.env.SEED_ADMIN_EMAIL || "admin@example.com";
-  const adminPassword = process.env.SEED_ADMIN_PASSWORD || "admin123";
-
   const existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail }
   });
@@ -81,8 +66,7 @@ async function main() {
 
   console.log("🎉 Database seeding completed!");
   console.log("\n📋 Users Created:");
-  console.log(`👤 Author: ${authorEmail} / ${authorPassword}`);
-  console.log(`👑 Admin: ${adminEmail} / ${adminPassword}`);
+  console.log(`👑 Admin: ${adminEmail}`);
 }
 
 main()
