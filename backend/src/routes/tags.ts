@@ -5,12 +5,13 @@ import { authenticateToken, requireAdmin } from "../middleware/auth";
 import { validateTagName } from "../utils/validation";
 import slugify from "slugify";
 import { AuthRequest } from "../types/auth";
+import { cache, cacheInvalidation } from "../utils/cache";
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all tags
-router.get("/", async (req, res) => {
+router.get("/", cache({ ttl: 600 }), async (req, res) => {
   try {
     const tags = await prisma.tag.findMany({
       orderBy: {
@@ -72,6 +73,9 @@ router.post(
         }
       });
 
+      // Invalidate tags cache
+      await cacheInvalidation.invalidateTags();
+
       return res.status(201).json(tag);
     } catch (error) {
       console.error("Error creating tag:", error);
@@ -113,6 +117,9 @@ router.post(
         where: { id }
       });
 
+      // Invalidate tags cache
+      await cacheInvalidation.invalidateTags();
+
       return res.json({ message: "Tag deleted successfully" });
     } catch (error) {
       console.error("Error deleting tag:", error);
@@ -152,6 +159,9 @@ router.post(
           }
         }
       });
+
+      // Invalidate tags cache
+      await cacheInvalidation.invalidateTags();
 
       return res.json({
         message: `Deleted ${deleteResult.count} unused tags`,

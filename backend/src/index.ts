@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import session from "express-session";
 import { PrismaClient } from "@prisma/client";
+import redisClient from "./config/redis";
 
 // Import routes
 import authRoutes from "./routes/auth";
@@ -77,6 +78,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "healthy",
     database: "connected",
+    redis: redisClient.isHealthy() ? "connected" : "disconnected",
     timestamp: new Date().toISOString(),
     service: "Kiyadur-backend"
   });
@@ -110,12 +112,14 @@ app.use("*", (req, res) => {
 process.on("SIGINT", async () => {
   console.log("Shutting down gracefully...");
   await prisma.$disconnect();
+  await redisClient.disconnect();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   console.log("Shutting down gracefully...");
   await prisma.$disconnect();
+  await redisClient.disconnect();
   process.exit(0);
 });
 

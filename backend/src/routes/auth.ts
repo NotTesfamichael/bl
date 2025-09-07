@@ -173,7 +173,7 @@ router.get("/verify", async (req: express.Request, res: express.Response) => {
 
     return res.json({ user });
   } catch (error) {
-    console.error("Token verification error:", error);
+    // Don't log JWT verification errors as they're expected for invalid tokens
     return res.status(401).json({ error: "Invalid token" });
   }
 });

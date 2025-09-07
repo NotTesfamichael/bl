@@ -13,12 +13,13 @@ import {
   validatePostSlug
 } from "../utils/validation";
 import { AuthRequest } from "../types/auth";
+import { cache, cacheInvalidation } from "../utils/cache";
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all posts
-router.get("/", async (req, res) => {
+router.get("/", cache({ ttl: 300 }), async (req, res) => {
   try {
     const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
     const page = parseInt(searchParams.get("page") || "1");
@@ -58,7 +59,7 @@ router.get("/", async (req, res) => {
           where.visibility = "PUBLIC";
         }
       } catch (error) {
-        // Invalid token, only show public posts
+        // Invalid token, only show public posts (don't log as this is expected)
         where.visibility = "PUBLIC";
       }
     } else {
@@ -135,7 +136,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get single post by slug
-router.get("/slug/:slug", async (req, res) => {
+router.get("/slug/:slug", cache({ ttl: 600 }), async (req, res) => {
   try {
     const { slug } = req.params;
 
@@ -150,7 +151,7 @@ router.get("/slug/:slug", async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
         userId = decoded.userId;
       } catch (error) {
-        // Invalid token, userId remains null
+        // Invalid token, userId remains null (don't log as this is expected)
       }
     }
 
@@ -217,7 +218,7 @@ router.get("/slug/:slug", async (req, res) => {
 });
 
 // Get user's posts (including drafts)
-(router.get as any)("/my-posts", authenticateToken, (async (
+(router.get as any)("/my-posts", authenticateToken, cache({ ttl: 60 }), (async (
   req: AuthRequest,
   res: express.Response
 ) => {
@@ -279,7 +280,7 @@ router.get("/slug/:slug", async (req, res) => {
 }) as any);
 
 // Get single post by ID (for editing)
-(router.get as any)("/:id", authenticateToken, (async (
+(router.get as any)("/:id", authenticateToken, cache({ ttl: 60 }), (async (
   req: AuthRequest,
   res: express.Response
 ) => {
@@ -439,6 +440,9 @@ router.post(
         });
       }
 
+      // Invalidate relevant caches
+      await cacheInvalidation.invalidatePost(post.id);
+
       return res.status(201).json(post);
     } catch (error) {
       console.error("Error creating post:", error);
@@ -529,6 +533,9 @@ router.post(
       }
     }
 
+    // Invalidate relevant caches
+    await cacheInvalidation.invalidatePost(id);
+
     return res.json(updatedPost);
   } catch (error) {
     console.error("Error updating post:", error);
@@ -559,6 +566,9 @@ router.post(
     await prisma.post.delete({
       where: { id: id }
     });
+
+    // Invalidate relevant caches
+    await cacheInvalidation.invalidatePost(id);
 
     return res.json({ message: "Post deleted successfully" });
   } catch (error) {
@@ -597,6 +607,9 @@ router.post(
       }
     });
 
+    // Invalidate relevant caches
+    await cacheInvalidation.invalidatePost(id);
+
     return res.json({
       message: "Post unpublished successfully",
       post: updatedPost
@@ -631,6 +644,10 @@ router.post(
       await prisma.reaction.delete({
         where: { id: existingReaction.id }
       });
+
+      // Invalidate post cache to update like count
+      await cacheInvalidation.invalidatePost(id);
+
       return res.json({ liked: false });
     } else {
       // Like
@@ -641,6 +658,10 @@ router.post(
           type: "LIKE"
         }
       });
+
+      // Invalidate post cache to update like count
+      await cacheInvalidation.invalidatePost(id);
+
       return res.json({ liked: true });
     }
   } catch (error) {

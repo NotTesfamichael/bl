@@ -4,12 +4,13 @@ import { body, validationResult } from "express-validator";
 import { authenticateToken } from "../middleware/auth";
 import { validateCommentContent } from "../utils/validation";
 import { AuthRequest } from "../types/auth";
+import { cache, cacheInvalidation } from "../utils/cache";
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get comments for a post
-router.get("/posts/:postId", async (req, res) => {
+router.get("/posts/:postId", cache({ ttl: 300 }), async (req, res) => {
   try {
     const { postId } = req.params;
 
@@ -89,6 +90,9 @@ router.post(
         }
       });
 
+      // Invalidate post and comments cache
+      await cacheInvalidation.invalidatePost(postId);
+
       return res.status(201).json(comment);
     } catch (error) {
       console.error("Error creating comment:", error);
@@ -120,6 +124,9 @@ router.post(
     await prisma.comment.delete({
       where: { id: commentId }
     });
+
+    // Invalidate post and comments cache
+    await cacheInvalidation.invalidatePost(comment.postId);
 
     return res.json({ message: "Comment deleted successfully" });
   } catch (error) {

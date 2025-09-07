@@ -1,5 +1,6 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+import redisClient from "../config/redis";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -13,6 +14,7 @@ router.get("/", async (req, res) => {
     const health = {
       status: "healthy",
       database: "connected",
+      redis: redisClient.isHealthy() ? "connected" : "disconnected",
       timestamp: new Date().toISOString(),
       service: "Kiyadur-backend"
     };
@@ -24,6 +26,7 @@ router.get("/", async (req, res) => {
     const health = {
       status: "unhealthy",
       database: "disconnected",
+      redis: redisClient.isHealthy() ? "connected" : "disconnected",
       timestamp: new Date().toISOString(),
       service: "Kiyadur-backend",
       error: error instanceof Error ? error.message : "Unknown error"

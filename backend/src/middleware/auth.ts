@@ -24,6 +24,7 @@ export const authenticateToken = (
     };
     next();
   } catch (error) {
+    // Don't log JWT verification errors as they're expected for invalid tokens
     res.status(403).json({ error: "Invalid or expired token" });
     return;
   }

@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "test:redis": "tsx src/test-redis.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -33,7 +34,8 @@
     "jsdom": "^23.0.1",
     "marked": "^11.1.1",
     "slugify": "^1.6.6",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "redis": "^4.6.12"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -48,6 +50,7 @@
     "@types/dompurify": "^3.0.5",
     "@types/jsdom": "^21.1.6",
     "@types/node": "^20.10.5",
+    "@types/redis": "^4.0.11",
     "typescript": "^5.3.3",
     "tsx": "^4.6.2",
     "prisma": "^5.7.1"
