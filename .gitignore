@@ -190,4 +190,6 @@ test-results.xml
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.db.env*
+.env
+.env.backup
