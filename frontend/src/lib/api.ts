@@ -31,10 +31,12 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     // Use external URL for client-side requests, internal URL for server-side
-    const baseURL = typeof window !== "undefined" 
-      ? (process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://localhost:3001/api")
-      : this.baseURL;
-    
+    const baseURL =
+      typeof window !== "undefined"
+        ? process.env.NEXT_PUBLIC_EXTERNAL_API_URL ||
+          "http://localhost:3001/api"
+        : this.baseURL;
+
     const url = `${baseURL}${endpoint}`;
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -146,7 +148,8 @@ class ApiClient {
   // Google OAuth methods
   getGoogleAuthUrl() {
     // For OAuth redirects, we need to use the external URL that the browser can access
-    const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://localhost:3001/api";
+    const externalApiUrl =
+      process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://localhost:3001/api";
     return `${externalApiUrl}/auth/google`;
   }
 
