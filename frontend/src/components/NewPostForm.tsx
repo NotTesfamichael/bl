@@ -287,9 +287,9 @@ export function NewPostForm({
           </CardHeader>
           <CardContent className="flex-1">
             {isPreview ? (
-              <PostContent 
-                content={content} 
-                className="prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-4 sm:p-6" 
+              <PostContent
+                content={content}
+                className="prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-4 sm:p-6"
               />
             ) : (
               <div>
