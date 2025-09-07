@@ -14,6 +14,7 @@ interface SearchPost {
   title: string;
   slug: string;
   excerpt: string | null;
+  visibility: "PUBLIC" | "PRIVATE";
   publishedAt: string | null;
   author: {
     name: string;

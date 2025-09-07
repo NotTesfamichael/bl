@@ -19,6 +19,7 @@ interface Post {
   excerpt: string | null;
   contentMarkdown: string;
   status: "DRAFT" | "PUBLISHED";
+  visibility: "PUBLIC" | "PRIVATE";
   tags: Array<{
     tag: {
       id: string;

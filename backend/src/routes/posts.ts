@@ -26,15 +26,56 @@ router.get("/", async (req, res) => {
     const search = searchParams.get("search");
     const tag = searchParams.get("tag");
     const status = searchParams.get("status") || "PUBLISHED";
+    const visibility = searchParams.get("visibility");
 
     const where: Record<string, unknown> = { status };
 
+    // Handle visibility filtering
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      // User is authenticated - show PUBLIC posts and their own PRIVATE posts
+      try {
+        const token = authHeader.substring(7);
+        const jwt = require("jsonwebtoken");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+        if (visibility) {
+          // If specific visibility is requested
+          if (visibility === "PRIVATE") {
+            where.AND = [
+              { visibility: "PRIVATE" },
+              { authorId: decoded.userId }
+            ];
+          } else if (visibility === "PUBLIC") {
+            where.visibility = "PUBLIC";
+          }
+        } else {
+          // Default behavior: only show PUBLIC posts (no private posts in "All Posts")
+          where.visibility = "PUBLIC";
+        }
+      } catch (error) {
+        // Invalid token, only show public posts
+        where.visibility = "PUBLIC";
+      }
+    } else {
+      // User is not authenticated - only show public posts
+      where.visibility = "PUBLIC";
+    }
+
     if (search) {
-      where.OR = [
+      const searchConditions = [
         { title: { contains: search, mode: "insensitive" } },
         { excerpt: { contains: search, mode: "insensitive" } },
         { contentMarkdown: { contains: search, mode: "insensitive" } }
       ];
+
+      if (where.OR) {
+        // Combine visibility OR with search conditions
+        where.AND = [{ OR: where.OR }, { OR: searchConditions }];
+        delete where.OR;
+      } else {
+        where.OR = searchConditions;
+      }
     }
 
     if (tag) {
@@ -94,6 +135,21 @@ router.get("/slug/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
 
+    // Check if user is authenticated
+    const authHeader = req.headers.authorization;
+    let userId: string | null = null;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.substring(7);
+        const jwt = require("jsonwebtoken");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+        userId = decoded.userId;
+      } catch (error) {
+        // Invalid token, userId remains null
+      }
+    }
+
     const post = await prisma.post.findUnique({
       where: {
         slug,
@@ -133,6 +189,13 @@ router.get("/slug/:slug", async (req, res) => {
 
     if (!post) {
       return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Check visibility permissions
+    if (post.visibility === "PRIVATE") {
+      if (!userId || post.authorId !== userId) {
+        return res.status(404).json({ error: "Post not found" });
+      }
     }
 
     // Increment view count
@@ -261,7 +324,8 @@ router.post(
   [
     body("title").trim().isLength({ min: 1, max: 200 }),
     body("contentMarkdown").trim().isLength({ min: 1 }),
-    body("status").optional().isIn(["DRAFT", "PUBLISHED"])
+    body("status").optional().isIn(["DRAFT", "PUBLISHED"]),
+    body("visibility").optional().isIn(["PUBLIC", "PRIVATE"])
   ],
   (async (req: AuthRequest, res: express.Response) => {
     try {
@@ -279,7 +343,8 @@ router.post(
         contentMarkdown,
         excerpt,
         tagIds = [],
-        status = "DRAFT"
+        status = "DRAFT",
+        visibility = "PUBLIC"
       } = req.body;
 
       // Validate input
@@ -341,6 +406,7 @@ router.post(
           contentHtml,
           excerpt: finalExcerpt,
           status,
+          visibility,
           authorId: req.user!.userId,
           publishedAt: status === "PUBLISHED" ? new Date() : null
         },
@@ -384,7 +450,15 @@ router.post(
 ) => {
   try {
     const { id } = req.params;
-    const { title, slug, contentMarkdown, excerpt, status, tagIds } = req.body;
+    const {
+      title,
+      slug,
+      contentMarkdown,
+      excerpt,
+      status,
+      visibility,
+      tagIds
+    } = req.body;
 
     // Validate required fields
     if (!title || !slug || !contentMarkdown) {
@@ -419,6 +493,7 @@ router.post(
         contentHtml,
         excerpt: finalExcerpt,
         status,
+        visibility,
         publishedAt:
           status === "PUBLISHED" ? new Date() : existingPost.publishedAt,
         updatedAt: new Date()

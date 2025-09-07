@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Eye, Globe } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Save, Eye, Globe, Lock, Users } from "lucide-react";
 import { toast } from "sonner";
 import { generateSlug } from "@/lib/markdown";
 import { apiClient } from "@/lib/api";
@@ -33,6 +34,7 @@ interface Post {
   excerpt: string | null;
   contentMarkdown: string;
   status: "DRAFT" | "PUBLISHED";
+  visibility: "PUBLIC" | "PRIVATE";
   tags: Array<{
     tag: {
       id: string;
@@ -68,6 +70,9 @@ export function NewPostForm({
   const [isPreview, setIsPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">(
+    post?.visibility || "PUBLIC"
+  );
 
   // Validation state
   const titleValidation = validatePostTitle(title);
@@ -101,6 +106,7 @@ export function NewPostForm({
         contentMarkdown: content,
         excerpt,
         status: "DRAFT" as const,
+        visibility,
         tagIds: selectedTags.map((tag: Tag) => tag.id)
       };
 
@@ -145,6 +151,7 @@ export function NewPostForm({
     content,
     slug,
     excerpt,
+    visibility,
     selectedTags,
     isEditing,
     post?.id,
@@ -198,7 +205,8 @@ export function NewPostForm({
         contentMarkdown: content,
         excerpt,
         tagIds: selectedTags.map((tag: Tag) => tag.id),
-        status: "PUBLISHED" as const
+        status: "PUBLISHED" as const,
+        visibility
       };
 
       let response;
@@ -388,6 +396,42 @@ export function NewPostForm({
                 className="mt-1"
                 rows={3}
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Visibility</label>
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="public"
+                    name="visibility"
+                    value="PUBLIC"
+                    checked={visibility === "PUBLIC"}
+                    onChange={(e) => setVisibility(e.target.value as "PUBLIC" | "PRIVATE")}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="public" className="flex items-center space-x-2 cursor-pointer">
+                    <Users className="h-4 w-4" />
+                    <span>Public - Everyone can see this post</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="private"
+                    name="visibility"
+                    value="PRIVATE"
+                    checked={visibility === "PRIVATE"}
+                    onChange={(e) => setVisibility(e.target.value as "PUBLIC" | "PRIVATE")}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <Label htmlFor="private" className="flex items-center space-x-2 cursor-pointer">
+                    <Lock className="h-4 w-4" />
+                    <span>Private - Only you can see this post</span>
+                  </Label>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

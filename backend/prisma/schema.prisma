@@ -64,18 +64,19 @@ model VerificationToken {
 }
 
 model Post {
-  id              String      @id @default(cuid())
+  id              String         @id @default(cuid())
   title           String
-  slug            String      @unique
-  contentMarkdown String      @db.Text
-  contentHtml     String      @db.Text
-  status          PostStatus  @default(DRAFT)
+  slug            String         @unique
+  contentMarkdown String         @db.Text
+  contentHtml     String         @db.Text
+  status          PostStatus     @default(DRAFT)
+  visibility      PostVisibility @default(PUBLIC)
   excerpt         String?
   coverImageUrl   String?
   authorId        String
   publishedAt     DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
   tags       PostTag[]
@@ -160,6 +161,11 @@ enum Role {
 enum PostStatus {
   DRAFT
   PUBLISHED
+}
+
+enum PostVisibility {
+  PUBLIC
+  PRIVATE
 }
 
 enum ReactionType {

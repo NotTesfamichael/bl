@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Eye, Heart } from "lucide-react";
+import { Calendar, Eye, Heart, Lock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface PostCardProps {
@@ -10,6 +10,7 @@ interface PostCardProps {
     title: string;
     slug: string;
     excerpt: string | null;
+    visibility: "PUBLIC" | "PRIVATE";
     publishedAt: string | null;
     author: {
       name: string;
@@ -35,15 +36,24 @@ export function PostCard({ post }: PostCardProps) {
     post.reactions?.filter((r: { type: string }) => r.type === "LIKE").length ||
     0;
 
+  // Determine the correct URL based on visibility
+  const postUrl =
+    post.visibility === "PRIVATE"
+      ? `/p/private/${post.slug}`
+      : `/p/${post.slug}`;
+
   return (
     <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer hover:scale-[1.02] transition-transform group">
-      <Link href={`/p/${post.slug}`} className="block h-full">
+      <Link href={postUrl} className="block h-full">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
             <h2 className="text-lg sm:text-xl font-semibold line-clamp-2 text-black group-hover:text-[#556b2f] transition-colors">
               {post.title}
             </h2>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 flex-shrink-0">
+              {post.visibility === "PRIVATE" && (
+                <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-600" />
+              )}
               <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
               <span>{viewCount}</span>
               <Heart className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -75,20 +85,25 @@ export function PostCard({ post }: PostCardProps) {
 
       <CardContent className="pt-0">
         <div className="flex flex-wrap gap-2">
-          {post.tags.map(({ tag }: { tag: { name: string; slug: string } }, index: number) => (
-            <Link
-              key={`${tag.slug}-${index}`}
-              href={`/tags/${tag.slug}`}
-              className="inline-block"
-            >
-              <Badge
-                variant="secondary"
-                className="hover:bg-[#556b2f] hover:text-white"
+          {post.tags.map(
+            (
+              { tag }: { tag: { name: string; slug: string } },
+              index: number
+            ) => (
+              <Link
+                key={`${tag.slug}-${index}`}
+                href={`/tags/${tag.slug}`}
+                className="inline-block"
               >
-                {tag.name}
-              </Badge>
-            </Link>
-          ))}
+                <Badge
+                  variant="secondary"
+                  className="hover:bg-[#556b2f] hover:text-white"
+                >
+                  {tag.name}
+                </Badge>
+              </Link>
+            )
+          )}
         </div>
       </CardContent>
     </Card>

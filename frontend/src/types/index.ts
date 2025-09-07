@@ -8,6 +8,7 @@ export interface Post {
   excerpt: string | null;
   slug: string;
   status: 'DRAFT' | 'PUBLISHED';
+  visibility: 'PUBLIC' | 'PRIVATE';
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -16,6 +17,7 @@ export interface Post {
     id: string;
     name: string;
     email: string;
+    image?: string | null;
   };
   tags: Array<{
     id?: string;

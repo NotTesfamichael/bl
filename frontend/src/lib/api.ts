@@ -167,6 +167,7 @@ class ApiClient {
     search?: string;
     tag?: string;
     status?: string;
+    visibility?: "PUBLIC" | "PRIVATE";
   }) {
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set("page", params.page.toString());
@@ -174,6 +175,7 @@ class ApiClient {
     if (params?.search) searchParams.set("search", params.search);
     if (params?.tag) searchParams.set("tag", params.tag);
     if (params?.status) searchParams.set("status", params.status);
+    if (params?.visibility) searchParams.set("visibility", params.visibility);
 
     const query = searchParams.toString();
     return this.request<PostsResponse>(`/posts${query ? `?${query}` : ""}`);
@@ -210,6 +212,7 @@ class ApiClient {
     excerpt?: string;
     tagIds?: string[];
     status?: "DRAFT" | "PUBLISHED";
+    visibility?: "PUBLIC" | "PRIVATE";
   }) {
     return this.request<Post>("/posts", {
       method: "POST",
@@ -225,6 +228,7 @@ class ApiClient {
       contentMarkdown: string;
       excerpt?: string;
       status?: "DRAFT" | "PUBLISHED";
+      visibility?: "PUBLIC" | "PRIVATE";
       tagIds?: string[];
     }
   ) {
