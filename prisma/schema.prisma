@@ -52,6 +52,7 @@ model User {
   sessions Session[]
   posts    Post[]
   reactions Reaction[]
+  comments Comment[]
 }
 
 model VerificationToken {
@@ -80,6 +81,7 @@ model Post {
   tags       PostTag[]
   reactions  Reaction[]
   views      View[]
+  comments   Comment[]
 
   @@index([status, publishedAt])
   @@index([authorId])
@@ -133,6 +135,21 @@ model View {
 
   @@unique([postId])
   @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  postId    String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
 }
 
 enum Role {

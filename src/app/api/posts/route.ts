@@ -6,6 +6,11 @@ import {
   generateExcerpt,
   generateSlug
 } from "@/lib/markdown";
+import {
+  validatePostTitle,
+  validatePostContent,
+  validatePostSlug
+} from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,27 +30,46 @@ export async function POST(request: NextRequest) {
       status = "DRAFT"
     } = body;
 
-    if (!title || !contentMarkdown) {
+    // Validate input
+    const titleValidation = validatePostTitle(title);
+    const contentValidation = validatePostContent(contentMarkdown);
+    const slugValidation = slug
+      ? validatePostSlug(slug)
+      : { isValid: true, errors: [] };
+
+    if (
+      !titleValidation.isValid ||
+      !contentValidation.isValid ||
+      !slugValidation.isValid
+    ) {
+      const errors = [
+        ...titleValidation.errors,
+        ...contentValidation.errors,
+        ...slugValidation.errors
+      ];
       return NextResponse.json(
-        { error: "Title and content are required" },
+        { error: "Validation failed", details: errors },
         { status: 400 }
       );
     }
 
-    // Generate slug if not provided
-    const finalSlug = slug || generateSlug(title);
+    // Use sanitized values
+    const sanitizedTitle = titleValidation.sanitizedValue!;
+    const sanitizedContent = contentValidation.sanitizedValue!;
+    const sanitizedSlug =
+      slugValidation.sanitizedValue || generateSlug(sanitizedTitle);
 
     // Ensure slug is unique
-    let uniqueSlug = finalSlug;
+    let uniqueSlug = sanitizedSlug;
     let counter = 1;
     while (await db.post.findUnique({ where: { slug: uniqueSlug } })) {
-      uniqueSlug = `${finalSlug}-${counter}`;
+      uniqueSlug = `${sanitizedSlug}-${counter}`;
       counter++;
     }
 
     // Compile markdown to HTML
-    const contentHtml = await compileMarkdownToHtml(contentMarkdown);
-    const finalExcerpt = excerpt || generateExcerpt(contentMarkdown);
+    const contentHtml = await compileMarkdownToHtml(sanitizedContent);
+    const finalExcerpt = excerpt || generateExcerpt(sanitizedContent);
 
     // Validate tag IDs if provided
     let validTagIds: string[] = [];
@@ -54,19 +78,22 @@ export async function POST(request: NextRequest) {
         where: { id: { in: tagIds } },
         select: { id: true }
       });
-      validTagIds = existingTags.map(tag => tag.id);
-      
+      validTagIds = existingTags.map((tag) => tag.id);
+
       if (validTagIds.length !== tagIds.length) {
-        console.log("Some tag IDs are invalid, using only valid ones:", validTagIds);
+        console.log(
+          "Some tag IDs are invalid, using only valid ones:",
+          validTagIds
+        );
       }
     }
 
     // Create post
     const post = await db.post.create({
       data: {
-        title,
+        title: sanitizedTitle,
         slug: uniqueSlug,
-        contentMarkdown,
+        contentMarkdown: sanitizedContent,
         contentHtml,
         excerpt: finalExcerpt,
         status,

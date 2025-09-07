@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PostActions } from "@/components/PostActions";
+import { CommentSection } from "@/components/CommentSection";
 import { Calendar, Clock, Eye, Heart, ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -178,6 +179,11 @@ export default async function PostPage({ params }: PostPageProps) {
           </footer>
         </div>
       </article>
+
+      {/* Comments Section */}
+      <div id="comments" className="mt-12">
+        <CommentSection postId={post.id} />
+      </div>
     </div>
   );
 }

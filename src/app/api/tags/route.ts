@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/markdown";
+import { validateTagName } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,19 +14,22 @@ export async function POST(request: NextRequest) {
 
     const { name } = await request.json();
 
-    if (!name || name.trim().length === 0) {
+    // Validate tag name
+    const validation = validateTagName(name);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { error: "Tag name is required" },
+        { error: "Validation failed", details: validation.errors },
         { status: 400 }
       );
     }
 
-    const slug = generateSlug(name.trim());
+    const sanitizedName = validation.sanitizedValue!;
+    const slug = generateSlug(sanitizedName);
 
     // Check if tag already exists
     const existingTag = await db.tag.findFirst({
       where: {
-        OR: [{ name: name.trim() }, { slug: slug }]
+        OR: [{ name: sanitizedName }, { slug: slug }]
       }
     });
 
@@ -39,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Create the tag
     const tag = await db.tag.create({
       data: {
-        name: name.trim(),
+        name: sanitizedName,
         slug: slug
       }
     });

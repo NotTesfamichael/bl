@@ -9,7 +9,10 @@ export async function POST(
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Please log in to like posts" },
+      { status: 401 }
+    );
   }
 
   const { id } = await params;
