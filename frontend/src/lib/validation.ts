@@ -84,6 +84,8 @@ export function validatePostSlug(slug: string): ValidationResult {
     const trimmed = slug.trim();
     if (trimmed.length === 0) {
       errors.push("Slug cannot be empty");
+    } else if (trimmed.length < 3) {
+      errors.push("Slug must be at least 3 characters long");
     } else if (!/^[a-z0-9-]+$/.test(trimmed)) {
       errors.push(
         "Slug can only contain lowercase letters, numbers, and hyphens"
