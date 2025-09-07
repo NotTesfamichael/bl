@@ -159,6 +159,11 @@ class RedisClient {
       this.isConnected = false;
     }
   }
+
+  // Getter for the Redis client (for session store)
+  public getClient() {
+    return this.client;
+  }
 }
 
 // Export singleton instance
