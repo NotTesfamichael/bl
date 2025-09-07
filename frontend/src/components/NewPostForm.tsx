@@ -13,7 +13,12 @@ import { toast } from "sonner";
 import { generateSlug } from "@/lib/markdown";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
-import { validatePostTitle, validatePostContent, validatePostSlug } from "@/lib/validation";
+import { PostContent } from "@/components/PostContent";
+import {
+  validatePostTitle,
+  validatePostContent,
+  validatePostSlug
+} from "@/lib/validation";
 
 interface Tag {
   id: string;
@@ -68,7 +73,10 @@ export function NewPostForm({
   const titleValidation = validatePostTitle(title);
   const contentValidation = validatePostContent(content);
   const slugValidation = validatePostSlug(slug);
-  const isFormValid = titleValidation.isValid && contentValidation.isValid && slugValidation.isValid;
+  const isFormValid =
+    titleValidation.isValid &&
+    contentValidation.isValid &&
+    slugValidation.isValid;
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -279,9 +287,9 @@ export function NewPostForm({
           </CardHeader>
           <CardContent className="flex-1">
             {isPreview ? (
-              <div
-                className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-4 sm:p-6"
-                dangerouslySetInnerHTML={{ __html: content }}
+              <PostContent 
+                content={content} 
+                className="prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto min-h-[500px] p-4 sm:p-6" 
               />
             ) : (
               <div>
@@ -320,12 +328,16 @@ export function NewPostForm({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Write a compelling title for your post..."
-                className={`mt-1 ${!titleValidation.isValid && title ? 'border-red-500' : ''}`}
+                className={`mt-1 ${
+                  !titleValidation.isValid && title ? "border-red-500" : ""
+                }`}
               />
               <div className="flex justify-between items-center mt-1">
                 <div className="text-xs text-gray-500">
                   {titleValidation.errors.length > 0 ? (
-                    <span className="text-red-500">{titleValidation.errors[0]}</span>
+                    <span className="text-red-500">
+                      {titleValidation.errors[0]}
+                    </span>
                   ) : (
                     <span className="text-green-600">Title looks good!</span>
                   )}
@@ -342,12 +354,16 @@ export function NewPostForm({
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder="my-awesome-post-slug"
-                className={`mt-1 ${!slugValidation.isValid && slug ? 'border-red-500' : ''}`}
+                className={`mt-1 ${
+                  !slugValidation.isValid && slug ? "border-red-500" : ""
+                }`}
               />
               <div className="flex justify-between items-center mt-1">
                 <div className="text-xs text-gray-500">
                   {slugValidation.errors.length > 0 ? (
-                    <span className="text-red-500">{slugValidation.errors[0]}</span>
+                    <span className="text-red-500">
+                      {slugValidation.errors[0]}
+                    </span>
                   ) : slug ? (
                     <span className="text-green-600">Slug looks good!</span>
                   ) : (

@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { PostActions } from "@/components/PostActions";
 import { CommentSection } from "@/components/CommentSection";
+import { PostContent } from "@/components/PostContent";
 import { BlogPostHeaderActions } from "@/components/BlogPostHeaderActions";
 import { Header } from "@/components/Header";
 import { Calendar, Clock, Eye, Heart } from "lucide-react";
@@ -95,10 +96,7 @@ export default async function PostPage({ params }: PostPageProps) {
             </header>
 
             {/* Post Content */}
-            <div
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.contentHtml || post.content || "" }}
-            />
+            <PostContent content={post.contentHtml || post.content || ""} />
 
             {/* Post Footer */}
             <footer className="mt-12 pt-8 border-t">
