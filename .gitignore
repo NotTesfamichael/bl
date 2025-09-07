@@ -1,41 +1,192 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules/
+*/node_modules/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*/.env
+*/.env.local
+*/.env.development.local
+*/.env.test.local
+*/.env.production.local
 
-# testing
-/coverage
+# Build outputs
+dist/
+build/
+.next/
+*/dist/
+*/build/
+*/.next/
+*.tsbuildinfo
+*/*.tsbuildinfo
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+lerna-debug.log*
+*/logs/
+*/*.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# vercel
-.vercel
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+*/coverage/
 
-# typescript
+# nyc test coverage
+.nyc_output
+*/.nyc_output
+
+# TypeScript cache
 *.tsbuildinfo
-next-env.d.ts
+*/*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+*/.npm
+
+# Optional eslint cache
+.eslintcache
+*/.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+*/.rpt2_cache/
+*/.rts2_cache_cjs/
+*/.rts2_cache_es/
+*/.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+*/.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+*/.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+*/.cache
+*/.parcel-cache
+
+# Nuxt.js build / generate output
+.nuxt
+*/.nuxt
+
+# Gatsby files
+.cache/
+public
+*/.cache/
+*/public
+
+# Storybook build outputs
+.out
+.storybook-out
+*/.out
+*/.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+*/tmp/
+*/temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*/*.db
+*/*.sqlite
+*/*.sqlite3
+
+# Prisma
+prisma/migrations/
+!prisma/migrations/.gitkeep
+*/prisma/migrations/
+!*/prisma/migrations/.gitkeep
+
+# Uploads
+uploads/
+public/uploads/
+*/uploads/
+*/public/uploads/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*/*.pem
+*/*.key
+*/*.crt
+
+# Docker
+.dockerignore
+Dockerfile*
+docker-compose*.yml
+!docker-compose.yml.example
+*/.dockerignore
+*/Dockerfile*
+*/docker-compose*.yml
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+test-results.xml
+*/coverage/
+*/.nyc_output/
+*/test-results/
+*/playwright-report/
+*/test-results.xml
+
+# Misc
+*.tgz
+*.tar.gz
+*/*.tgz
+*/*.tar.gz
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -12,6 +12,7 @@ import {
   validatePostContent,
   validatePostSlug
 } from "../utils/validation";
+import { AuthRequest } from "../types/auth";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -73,7 +74,7 @@ router.get("/", async (req, res) => {
       prisma.post.count({ where })
     ]);
 
-    res.json({
+    return res.json({
       posts,
       pagination: {
         page,
@@ -84,7 +85,7 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching posts:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -141,15 +142,18 @@ router.get("/slug/:slug", async (req, res) => {
       create: { postId: post.id, count: 1 }
     });
 
-    res.json(post);
+    return res.json(post);
   } catch (error) {
     console.error("Error fetching post:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Get user's posts (including drafts)
-router.get("/my-posts", authenticateToken, async (req, res) => {
+(router.get as any)("/my-posts", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
     const page = parseInt(searchParams.get("page") || "1");
@@ -157,7 +161,7 @@ router.get("/my-posts", authenticateToken, async (req, res) => {
     const status = searchParams.get("status"); // Optional filter by status
 
     const where: Record<string, unknown> = {
-      authorId: req.user.userId
+      authorId: req.user!.userId
     };
 
     // If status is specified, filter by it, otherwise get all user's posts
@@ -192,7 +196,7 @@ router.get("/my-posts", authenticateToken, async (req, res) => {
       prisma.post.count({ where })
     ]);
 
-    res.json({
+    return res.json({
       posts,
       pagination: {
         page,
@@ -203,12 +207,15 @@ router.get("/my-posts", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching user posts:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 // Get single post by ID (for editing)
-router.get("/:id", authenticateToken, async (req, res) => {
+(router.get as any)("/:id", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { id } = req.params;
     const userId = (req as any).user.userId;
@@ -240,23 +247,23 @@ router.get("/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    res.json(post);
+    return res.json(post);
   } catch (error) {
     console.error("Error fetching post:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 // Create new post
 router.post(
   "/",
-  authenticateToken,
+  authenticateToken as any,
   [
     body("title").trim().isLength({ min: 1, max: 200 }),
     body("contentMarkdown").trim().isLength({ min: 1 }),
     body("status").optional().isIn(["DRAFT", "PUBLISHED"])
   ],
-  async (req, res) => {
+  (async (req: AuthRequest, res: express.Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -334,7 +341,7 @@ router.post(
           contentHtml,
           excerpt: finalExcerpt,
           status,
-          authorId: req.user.userId,
+          authorId: req.user!.userId,
           publishedAt: status === "PUBLISHED" ? new Date() : null
         },
         include: {
@@ -362,16 +369,19 @@ router.post(
         });
       }
 
-      res.status(201).json(post);
+      return res.status(201).json(post);
     } catch (error) {
       console.error("Error creating post:", error);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
     }
-  }
+  }) as any
 );
 
 // Update post
-router.put("/:id", authenticateToken, async (req, res) => {
+(router.put as any)("/:id", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { id } = req.params;
     const { title, slug, contentMarkdown, excerpt, status, tagIds } = req.body;
@@ -387,7 +397,7 @@ router.put("/:id", authenticateToken, async (req, res) => {
     const existingPost = await prisma.post.findFirst({
       where: {
         id: id,
-        authorId: req.user.userId
+        authorId: req.user!.userId
       }
     });
 
@@ -440,15 +450,18 @@ router.put("/:id", authenticateToken, async (req, res) => {
       }
     }
 
-    res.json(updatedPost);
+    return res.json(updatedPost);
   } catch (error) {
     console.error("Error updating post:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 // Delete post
-router.delete("/:id", authenticateToken, async (req, res) => {
+(router.delete as any)("/:id", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { id } = req.params;
 
@@ -456,7 +469,7 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     const post = await prisma.post.findFirst({
       where: {
         id: id,
-        authorId: req.user.userId
+        authorId: req.user!.userId
       }
     });
 
@@ -468,15 +481,18 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       where: { id: id }
     });
 
-    res.json({ message: "Post deleted successfully" });
+    return res.json({ message: "Post deleted successfully" });
   } catch (error) {
     console.error("Error deleting post:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 // Unpublish post (move to draft)
-router.post("/:id/unpublish", authenticateToken, async (req, res) => {
+(router.post as any)("/:id/unpublish", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { id } = req.params;
 
@@ -484,7 +500,7 @@ router.post("/:id/unpublish", authenticateToken, async (req, res) => {
     const existingPost = await prisma.post.findFirst({
       where: {
         id: id,
-        authorId: req.user.userId,
+        authorId: req.user!.userId,
         status: "PUBLISHED" // Only allow unpublishing published posts
       }
     });
@@ -502,18 +518,21 @@ router.post("/:id/unpublish", authenticateToken, async (req, res) => {
       }
     });
 
-    res.json({ 
+    return res.json({
       message: "Post unpublished successfully",
       post: updatedPost
     });
   } catch (error) {
     console.error("Error unpublishing post:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 // Like/Unlike post
-router.post("/:id/like", authenticateToken, async (req, res) => {
+(router.post as any)("/:id/like", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { id } = req.params;
 
@@ -522,7 +541,7 @@ router.post("/:id/like", authenticateToken, async (req, res) => {
       where: {
         postId_userId_type: {
           postId: id,
-          userId: req.user.userId,
+          userId: req.user!.userId,
           type: "LIKE"
         }
       }
@@ -533,22 +552,22 @@ router.post("/:id/like", authenticateToken, async (req, res) => {
       await prisma.reaction.delete({
         where: { id: existingReaction.id }
       });
-      res.json({ liked: false });
+      return res.json({ liked: false });
     } else {
       // Like
       await prisma.reaction.create({
         data: {
           postId: id,
-          userId: req.user.userId,
+          userId: req.user!.userId,
           type: "LIKE"
         }
       });
-      res.json({ liked: true });
+      return res.json({ liked: true });
     }
   } catch (error) {
     console.error("Error toggling like:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 export default router;

@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { body, validationResult } from "express-validator";
 import { authenticateToken } from "../middleware/auth";
 import { validateCommentContent } from "../utils/validation";
+import { AuthRequest } from "../types/auth";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -28,19 +29,19 @@ router.get("/posts/:postId", async (req, res) => {
       }
     });
 
-    res.json(comments);
+    return res.json(comments);
   } catch (error) {
     console.error("Error fetching comments:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
 // Create new comment
 router.post(
   "/posts/:postId",
-  authenticateToken,
+  authenticateToken as any,
   [body("content").trim().isLength({ min: 5, max: 1000 })],
-  async (req, res) => {
+  (async (req: AuthRequest, res: express.Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -88,16 +89,19 @@ router.post(
         }
       });
 
-      res.status(201).json(comment);
+      return res.status(201).json(comment);
     } catch (error) {
       console.error("Error creating comment:", error);
-      res.status(500).json({ error: "Internal server error" });
+      return res.status(500).json({ error: "Internal server error" });
     }
-  }
+  }) as any
 );
 
 // Delete comment
-router.delete("/:commentId", authenticateToken, async (req, res) => {
+(router.delete as any)("/:commentId", authenticateToken, (async (
+  req: AuthRequest,
+  res: express.Response
+) => {
   try {
     const { commentId } = req.params;
 
@@ -117,11 +121,11 @@ router.delete("/:commentId", authenticateToken, async (req, res) => {
       where: { id: commentId }
     });
 
-    res.json({ message: "Comment deleted successfully" });
+    return res.json({ message: "Comment deleted successfully" });
   } catch (error) {
     console.error("Error deleting comment:", error);
-    res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: "Internal server error" });
   }
-});
+}) as any);
 
 export default router;

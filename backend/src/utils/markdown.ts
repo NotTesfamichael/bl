@@ -12,13 +12,11 @@ export async function compileMarkdownToHtml(markdown: string): Promise<string> {
     // Configure marked options
     marked.setOptions({
       breaks: true,
-      gfm: true,
-      headerIds: true,
-      mangle: false
+      gfm: true
     });
 
     // Convert markdown to HTML
-    const html = marked(markdown);
+    const html = await marked(markdown);
 
     // Sanitize HTML
     const sanitizedHtml = DOMPurify.sanitize(html, {

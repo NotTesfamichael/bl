@@ -1,66 +1,38 @@
-# Notes & Code Blog
+# Notes Blog - Separate Frontend & Backend Projects
 
-A Medium-like blog platform built with Next.js 14, featuring a rich text editor, code syntax highlighting, and a complete publishing workflow.
+This repository contains two separate, independent projects:
 
-## Features
+- **Frontend**: Next.js blog application
+- **Backend**: Node.js API server
 
-- **Rich Text Editor**: TipTap editor with markdown support, code blocks, and syntax highlighting
-- **Authentication**: NextAuth with email/password and Google OAuth
-- **Database**: PostgreSQL with Prisma ORM
-- **Publishing Workflow**: Draft → Preview → Publish with autosave
-- **SEO**: Meta tags, RSS feed, and sitemap generation
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-- **Code Highlighting**: Syntax highlighting for code blocks using Shiki
-- **Docker Support**: Complete Docker setup for development and production
+## 🏗️ Project Structure
 
-## Tech Stack
-
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Editor**: TipTap with Markdown support
-- **Database**: PostgreSQL + Prisma
-- **Authentication**: NextAuth.js
-- **Code Highlighting**: Shiki via rehype-pretty-code
-- **Containerization**: Docker + Docker Compose
-
-## Quick Start with Docker
-
-### Prerequisites
-
-- Docker and Docker Compose
-- Git
-
-### 🚀 One-Command Setup
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd notes-blog
-
-# Copy environment variables
-cp docker.env.example .env
-
-# Start the entire stack
-docker-compose -f docker-compose-dev.yml up --build
+```
+notes-blog/
+├── frontend/          # Next.js frontend application (independent)
+│   ├── src/          # Source code
+│   ├── public/       # Static assets
+│   ├── package.json  # Frontend dependencies
+│   ├── README.md     # Frontend documentation
+│   └── ...
+├── backend/          # Node.js backend API (independent)
+│   ├── src/          # Source code
+│   ├── prisma/       # Database schema
+│   ├── package.json  # Backend dependencies
+│   ├── README.md     # Backend documentation
+│   └── ...
+└── README.md         # This file
 ```
 
-That's it! The application will be available at [http://localhost:3000](http://localhost:3000)
-
-### Default Credentials
-
-- **Email**: author@example.com
-- **Password**: password123
-
-## Development Setup
+## 🚀 Quick Start
 
 ### Prerequisites
 
 - Node.js 18+
+- npm 8+
 - PostgreSQL database
-- npm or yarn
 
-### Installation
+### Installation & Setup
 
 1. **Clone the repository**
 
@@ -69,273 +41,183 @@ That's it! The application will be available at [http://localhost:3000](http://l
    cd notes-blog
    ```
 
-2. **Install dependencies**
+2. **Set up the Backend**
 
    ```bash
+   cd backend
    npm install
-   ```
-
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory:
-
-   ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/notes_blog?schema=public"
-
-   # NextAuth
-   NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="your-secret-key-here"
-
-   # OAuth Providers (optional)
-   GOOGLE_CLIENT_ID="your-google-client-id"
-   GOOGLE_CLIENT_SECRET="your-google-client-secret"
-   ```
-
-4. **Set up the database**
-
-   ```bash
-   # Generate Prisma client
-   npm run db:generate
-
-   # Push schema to database
-   npm run db:push
-
-   # Seed the database with sample data
-   npm run db:seed
-   ```
-
-5. **Start the development server**
-
-   ```bash
+   cp env.example .env
+   # Edit .env with your database and JWT settings
+   npx prisma migrate dev
+   npx prisma generate
    npm run dev
    ```
 
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Backend will be available at http://localhost:3001
 
-## Default Credentials
+3. **Set up the Frontend** (in a new terminal)
+   ```bash
+   cd frontend
+   npm install
+   cp .env.example .env.local
+   # Edit .env.local with your API URL
+   npm run dev
+   ```
+   Frontend will be available at http://localhost:3000
 
-The seed script creates a demo user:
+## 🐳 Docker Quick Start
 
-- **Email**: author@example.com
-- **Password**: password123
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── (public)/          # Public pages
-│   │   ├── p/[slug]/      # Post detail pages
-│   │   └── page.tsx       # Home page
-│   ├── (writer)/          # Writer pages (protected)
-│   │   └── writer/        # Writer dashboard and editor
-│   ├── api/               # API routes
-│   │   ├── auth/          # NextAuth configuration
-│   │   ├── posts/         # Post CRUD operations
-│   │   └── tags/          # Tag management
-│   └── layout.tsx         # Root layout
-├── components/
-│   ├── ui/                # shadcn/ui components
-│   ├── Editor.tsx         # TipTap editor component
-│   ├── PostCard.tsx       # Post card component
-│   └── ...
-├── lib/
-│   ├── auth.ts            # NextAuth configuration
-│   ├── db.ts              # Prisma client
-│   └── markdown.ts        # Markdown utilities
-└── types/
-    └── next-auth.d.ts     # NextAuth type definitions
-```
-
-## Docker Commands
-
-### Development Environment
+### Backend (Terminal 1)
 
 ```bash
-# Start development environment
-docker-compose -f docker-compose-dev.yml up --build
-
-# Start in background
-docker-compose -f docker-compose-dev.yml up -d --build
-
-# View logs
-docker-compose -f docker-compose-dev.yml logs -f
-
-# Stop development environment
-docker-compose -f docker-compose-dev.yml down
-
-# Rebuild and restart
-docker-compose -f docker-compose-dev.yml up --build --force-recreate
+cd backend
+cp env.example .env
+# Edit .env with your database settings
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
-### Production Environment
+**Result**: http://localhost:3001
+
+### Frontend (Terminal 2)
 
 ```bash
-# Start production environment
-docker-compose up --build
-
-# Start in background
-docker-compose up -d --build
-
-# View logs
-docker-compose logs -f
-
-# Stop production environment
-docker-compose down
-
-# Remove volumes (WARNING: This will delete all data)
-docker-compose down -v
+cd frontend
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
-### Database Management
+**Result**: http://localhost:3000
+
+### Production Mode
 
 ```bash
-# Access PostgreSQL database
-docker exec -it notes-blog-postgres-dev psql -U postgres -d notes_blog_dev
+# Backend
+cd backend && docker-compose up --build
 
-# Run Prisma migrations
-docker exec -it notes-blog-app-dev npx prisma migrate deploy
-
-# Generate Prisma client
-docker exec -it notes-blog-app-dev npx prisma generate
-
-# Seed the database
-docker exec -it notes-blog-app-dev npm run db:seed
-
-# Open Prisma Studio
-docker exec -it notes-blog-app-dev npx prisma studio
+# Frontend
+cd frontend && docker-compose up --build
 ```
 
-### Container Management
+## 📜 Development
+
+### Running the Projects
+
+**Backend (Terminal 1):**
 
 ```bash
-# List running containers
-docker ps
-
-# View container logs
-docker logs notes-blog-app-dev
-
-# Execute commands in container
-docker exec -it notes-blog-app-dev sh
-
-# Remove all containers and volumes
-docker-compose down -v --remove-orphans
-
-# Clean up unused Docker resources
-docker system prune -a
+cd backend
+npm run dev
 ```
 
-## Available Scripts
+**Frontend (Terminal 2):**
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema to database
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Seed database with sample data
-- `npm run db:studio` - Open Prisma Studio
+```bash
+cd frontend
+npm run dev
+```
 
-## Key Features
+### Building for Production
 
-### Writer Dashboard
+**Backend:**
 
-- View all drafts and published posts
-- Quick actions: Edit, Preview, Publish, Delete
-- Post statistics (views, likes, etc.)
+```bash
+cd backend
+npm run build
+npm run start
+```
 
-### Rich Text Editor
+**Frontend:**
 
-- TipTap editor with full formatting toolbar
-- Code blocks with syntax highlighting
-- Image support (paste/drag-drop)
-- Autosave every 3 seconds
-- Live preview mode
+```bash
+cd frontend
+npm run build
+npm run start
+```
 
-### Publishing Workflow
+## 🛠️ Technology Stack
 
-1. Create new draft
-2. Write content with rich editor
-3. Add metadata (title, slug, excerpt, tags)
-4. Preview before publishing
-5. Publish to make post live
-6. Edit published posts or unpublish
+### Frontend
 
-### Public Blog
+- **Next.js 15** - React framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **shadcn/ui** - UI components
 
-- Responsive post grid
-- Post detail pages with syntax highlighting
-- Tag filtering
-- Search functionality
-- SEO optimized
+### Backend
 
-## Docker Configuration
+- **Node.js** - Runtime
+- **Express.js** - Web framework
+- **TypeScript** - Type safety
+- **Prisma** - Database ORM
+- **JWT** - Authentication
+- **bcryptjs** - Password hashing
 
-### Files Overview
+### Database
 
-- **`Dockerfile`**: Production-ready multi-stage build
-- **`Dockerfile.dev`**: Development environment with hot reload
-- **`docker-compose.yml`**: Production environment setup
-- **`docker-compose-dev.yml`**: Development environment setup
-- **`docker.env.example`**: Environment variables template
+- **PostgreSQL** - Primary database
+- **Prisma** - Database toolkit and ORM
 
-### Environment Variables
+## 🔧 Environment Variables
 
-Copy `docker.env.example` to `.env` and configure:
+### Backend (.env)
 
 ```env
-# Database
-DATABASE_URL="postgresql://postgres:postgres@postgres:5432/notes_blog_dev"
-POSTGRES_DB="notes_blog"
-POSTGRES_USER="postgres"
-POSTGRES_PASSWORD="postgres"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
-
-# OAuth (Optional)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# Redis (Optional)
-REDIS_URL="redis://redis:6379"
+DATABASE_URL="postgresql://user:password@localhost:5432/notes_blog"
+JWT_SECRET="your-super-secret-jwt-key"
+JWT_EXPIRES_IN="7d"
+PORT=3001
+NODE_ENV="development"
+FRONTEND_URL="http://localhost:3000"
 ```
 
-### Ports
+### Frontend (.env.local)
 
-- **3000**: Next.js application
-- **5432**: PostgreSQL database
-- **6379**: Redis cache
+```env
+NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+```
 
-### Volumes
+## 🚀 Deployment
 
-- **postgres_data**: PostgreSQL data persistence
-- **redis_data**: Redis data persistence
-- **node_modules**: Node.js dependencies (development)
-- **.next**: Next.js build cache (development)
+### Frontend Deployment
 
-## Database Schema
+The frontend can be deployed to:
 
-The app uses the following main entities:
+- Vercel (recommended for Next.js)
+- Netlify
+- Any static hosting service
 
-- **User**: Authentication and author information
-- **Post**: Blog posts with markdown content and HTML rendering
-- **Tag**: Categorization system
-- **PostTag**: Many-to-many relationship between posts and tags
-- **Reaction**: User reactions (likes, bookmarks, etc.)
-- **View**: Post view tracking
+### Backend Deployment
 
-## Contributing
+The backend can be deployed to:
+
+- Railway
+- Heroku
+- DigitalOcean
+- Any Node.js hosting service
+
+## 📝 Features
+
+- ✅ User authentication and authorization
+- ✅ Create, edit, and delete blog posts
+- ✅ Draft and published post states
+- ✅ Tag system for posts
+- ✅ Comment system
+- ✅ Search functionality
+- ✅ Responsive design
+- ✅ Markdown support
+
+## 📖 Documentation
+
+- [Frontend Documentation](./frontend/README.md)
+- [Backend Documentation](./backend/README.md)
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Run tests and linting
 5. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License - see LICENSE file for details
+This project is licensed under the MIT License.

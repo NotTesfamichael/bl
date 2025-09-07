@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { PrismaClient } from "@prisma/client";
 import { body, validationResult } from "express-validator";
+import { AuthRequest } from "../types/auth";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -20,123 +21,131 @@ const validateRegister = [
 ];
 
 // Login endpoint
-router.post("/login", validateLogin, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: "Validation failed",
-        details: errors.array()
-      });
-    }
-
-    const { email, password } = req.body;
-
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user || !user.password) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: user.image,
-        role: user.role
+router.post(
+  "/login",
+  validateLogin,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: "Validation failed",
+          details: errors.array()
+        });
       }
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Internal server error" });
+
+      const { email, password } = req.body;
+
+      // Find user
+      const user = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (!user || !user.password) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      // Check password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      // Generate JWT token
+      const token = (jwt.sign as any)(
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+
+      return res.json({
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
-});
+);
 
 // Register endpoint
-router.post("/register", validateRegister, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: "Validation failed",
-        details: errors.array()
+router.post(
+  "/register",
+  validateRegister,
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          error: "Validation failed",
+          details: errors.array()
+        });
+      }
+
+      const { name, email, password } = req.body;
+
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
       });
-    }
 
-    const { name, email, password } = req.body;
-
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword
+      if (existingUser) {
+        return res.status(400).json({ error: "User already exists" });
       }
-    });
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-    );
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 12);
 
-    res.status(201).json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: user.image,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    console.error("Registration error:", error);
-    res.status(500).json({ error: "Internal server error" });
+      // Create user
+      const user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword
+        }
+      });
+
+      // Generate JWT token
+      const token = (jwt.sign as any)(
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+
+      return res.status(201).json({
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role
+        }
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
   }
-});
+);
 
 // Verify token endpoint
-router.get("/verify", async (req, res) => {
+router.get("/verify", async (req: express.Request, res: express.Response) => {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
 
@@ -144,7 +153,7 @@ router.get("/verify", async (req, res) => {
       return res.status(401).json({ error: "No token provided" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -161,10 +170,10 @@ router.get("/verify", async (req, res) => {
       return res.status(401).json({ error: "User not found" });
     }
 
-    res.json({ user });
+    return res.json({ user });
   } catch (error) {
     console.error("Token verification error:", error);
-    res.status(401).json({ error: "Invalid token" });
+    return res.status(401).json({ error: "Invalid token" });
   }
 });
 

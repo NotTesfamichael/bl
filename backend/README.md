@@ -1,132 +1,121 @@
-# Kiyadur Backend API
+# Notes Blog - Backend API
 
-A RESTful API backend for the Kiyadur blog platform built with Express.js, TypeScript, and Prisma.
+A Node.js backend API built with Express.js, TypeScript, and Prisma.
 
-## Features
+## 🚀 Quick Start
 
-- **Authentication**: JWT-based authentication with login/register
-- **Posts**: CRUD operations for blog posts with markdown support
-- **Comments**: Comment system for posts
-- **Tags**: Tag management for posts
-- **Likes**: Like/unlike functionality for posts
-- **Views**: Post view tracking
-- **Security**: Input validation, sanitization, rate limiting, CORS
-- **Database**: PostgreSQL with Prisma ORM
+### Prerequisites
 
-## API Endpoints
+- Node.js 18+
+- npm 8+
+- PostgreSQL database
 
-### Authentication
+### Installation
 
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/verify` - Verify JWT token
+1. **Navigate to backend directory**
 
-### Posts
+   ```bash
+   cd backend
+   ```
 
-- `GET /api/posts` - Get all posts (with pagination, search, filtering)
-- `GET /api/posts/slug/:slug` - Get post by slug
-- `POST /api/posts` - Create new post (authenticated)
-- `PUT /api/posts/:id` - Update post (authenticated, author only)
-- `DELETE /api/posts/:id` - Delete post (authenticated, author only)
-- `POST /api/posts/:id/like` - Like/unlike post (authenticated)
-
-### Comments
-
-- `GET /api/comments/posts/:postId` - Get comments for a post
-- `POST /api/comments/posts/:postId` - Create comment (authenticated)
-- `DELETE /api/comments/:commentId` - Delete comment (authenticated, author only)
-
-### Tags
-
-- `GET /api/tags` - Get all tags
-- `POST /api/tags` - Create tag (authenticated, admin only)
-- `DELETE /api/tags/:id` - Delete tag (authenticated, admin only)
-- `POST /api/tags/cleanup` - Cleanup unused tags (authenticated, admin only)
-
-### Health
-
-- `GET /api/health` - Health check endpoint
-
-## Setup
-
-1. **Install dependencies**:
+2. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-2. **Environment variables**:
-   Copy `env.example` to `.env` and configure:
+3. **Set up environment variables**
 
    ```bash
    cp env.example .env
+   # Edit .env with your database and JWT settings
    ```
 
-3. **Database setup**:
+4. **Set up the database**
 
    ```bash
-   npm run db:generate
-   npm run db:push
+   npx prisma migrate dev
+   npx prisma generate
    ```
 
-4. **Start development server**:
+5. **Start development server**
    ```bash
    npm run dev
    ```
 
-## Environment Variables
+Backend API will be available at http://localhost:3001
+
+## 📜 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Lint code
+- `npm run test` - Run tests
+
+## 🛠️ Technology Stack
+
+- **Node.js** - Runtime
+- **Express.js** - Web framework
+- **TypeScript** - Type safety
+- **Prisma** - Database ORM
+- **JWT** - Authentication
+- **bcryptjs** - Password hashing
+
+## 🔧 Environment Variables
+
+Create a `.env` file:
 
 ```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/kiyadur_db"
-
-# JWT
-JWT_SECRET="your-super-secret-jwt-key-here"
+DATABASE_URL="postgresql://user:password@localhost:5432/notes_blog"
+JWT_SECRET="your-super-secret-jwt-key"
 JWT_EXPIRES_IN="7d"
-
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# Server
 PORT=3001
 NODE_ENV="development"
-
-# CORS
 FRONTEND_URL="http://localhost:3000"
 ```
 
-## Scripts
+## 🗄️ Database Management
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema to database
-- `npm run db:migrate` - Run database migrations
-
-## Authentication
-
-The API uses JWT tokens for authentication. Include the token in the Authorization header:
-
-```
-Authorization: Bearer <your-jwt-token>
+```bash
+npx prisma studio    # Open Prisma Studio
+npx prisma migrate dev  # Run migrations
+npx prisma generate     # Generate Prisma client
 ```
 
-## CORS
+## 🐳 Docker Deployment
 
-The API is configured to accept requests from the frontend URL specified in `FRONTEND_URL` environment variable.
+### Quick Start with Docker
 
-## Rate Limiting
+```bash
+# Development (includes PostgreSQL)
+docker-compose -f docker-compose.dev.yml up --build
 
-- 100 requests per 15 minutes per IP address
-- Applied to all routes
+# Production (includes PostgreSQL)
+docker-compose up --build
+```
 
-## Security Features
+See [DOCKER.md](./DOCKER.md) for detailed Docker instructions.
 
-- Helmet.js for security headers
-- Input validation and sanitization
-- SQL injection protection via Prisma
-- XSS protection via DOMPurify
-- CORS configuration
-- Rate limiting
+## 🚀 Deployment
+
+The backend can be deployed to:
+
+- **Docker**: Any container platform
+- **Railway**: Full-stack platform
+- **Heroku**: PaaS platform
+- **DigitalOcean**: VPS/App Platform
+- **AWS/GCP/Azure**: Cloud platforms
+
+## 📝 API Endpoints
+
+- `GET /api/health` - Health check
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `GET /api/auth/verify` - Verify token
+- `GET /api/posts` - Get published posts
+- `GET /api/posts/my-posts` - Get user's posts
+- `POST /api/posts` - Create post
+- `PUT /api/posts/:id` - Update post
+- `DELETE /api/posts/:id` - Delete post
+- `POST /api/posts/:id/unpublish` - Unpublish post
