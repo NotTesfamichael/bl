@@ -26,7 +26,7 @@ export async function POST() {
       await db.tag.deleteMany({
         where: {
           id: {
-            in: unusedTags.map((tag) => tag.id)
+            in: unusedTags.map((tag: { id: string; name: string }) => tag.id)
           }
         }
       });
@@ -35,7 +35,10 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       deletedCount: unusedTags.length,
-      deletedTags: unusedTags.map((tag) => ({ id: tag.id, name: tag.name }))
+      deletedTags: unusedTags.map((tag: { id: string; name: string }) => ({
+        id: tag.id,
+        name: tag.name
+      }))
     });
   } catch (error) {
     console.error("Error cleaning up unused tags:", error);

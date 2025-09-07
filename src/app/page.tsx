@@ -4,20 +4,41 @@ import { SearchBar } from "@/components/SearchBar";
 import { Header } from "@/components/Header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
+import { db } from "@/lib/db";
 
 async function getPosts() {
-  const response = await fetch(
-    `${process.env.NEXTAUTH_URL}/api/posts?status=PUBLISHED&limit=10`,
-    {
-      cache: "no-store" // For demo purposes, in production you might want to use ISR
-    }
-  );
+  try {
+    const posts = await db.post.findMany({
+      where: {
+        status: "PUBLISHED"
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        tags: {
+          include: {
+            tag: true
+          }
+        },
+        views: true,
+        reactions: true
+      },
+      orderBy: {
+        publishedAt: "desc"
+      },
+      take: 10
+    });
 
-  if (!response.ok) {
+    return { posts, pagination: { total: posts.length, pages: 1 } };
+  } catch (error) {
+    console.error("Error fetching posts:", error);
     return { posts: [], pagination: { total: 0, pages: 0 } };
   }
-
-  return response.json();
 }
 
 export default async function HomePage() {

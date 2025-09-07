@@ -61,7 +61,7 @@ export default async function TagPage({ params }: TagPageProps) {
           <div className="flex items-center gap-3 mb-4">
             <Tag className="h-6 w-6 sm:h-8 sm:w-8 text-[#556B2F]" />
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">
-              Posts tagged with "{tag.name}"
+              Posts tagged with &quot;{tag.name}&quot;
             </h1>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -77,9 +77,34 @@ export default async function TagPage({ params }: TagPageProps) {
         {/* Posts */}
         {posts.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
+            {posts.map(
+              (post: {
+                id: string;
+                title: string;
+                slug: string;
+                excerpt: string | null;
+                publishedAt: Date | null;
+                author: {
+                  id: string;
+                  name: string | null;
+                  email: string | null;
+                };
+                tags: Array<{
+                  tag: {
+                    name: string;
+                    slug: string;
+                  };
+                }>;
+                views: Array<{
+                  count: number;
+                }>;
+                reactions: Array<{
+                  type: string;
+                }>;
+              }) => (
+                <PostCard key={post.id} post={post} />
+              )
+            )}
           </div>
         ) : (
           <div className="text-center py-12">

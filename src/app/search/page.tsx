@@ -9,6 +9,26 @@ interface SearchPageProps {
   searchParams: Promise<{ q?: string }>;
 }
 
+interface SearchPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  publishedAt: Date | null;
+  author: {
+    name: string | null;
+    image: string | null;
+  };
+  tags: {
+    tag: {
+      name: string;
+      slug: string;
+    };
+  }[];
+  views?: { count: number }[] | undefined;
+  reactions?: { type: string }[] | undefined;
+}
+
 async function getSearchResults(query: string) {
   const response = await fetch(
     `${
@@ -31,7 +51,7 @@ async function SearchResults({ query }: { query: string }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {posts.map((post: any) => (
+      {posts.map((post: SearchPost) => (
         <PostCard key={post.id} post={post} />
       ))}
     </div>
@@ -58,7 +78,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </Link>
               </h1>
               <p className="text-black text-sm sm:text-base">
-                Search results for "{query}"
+                Search results for &quot;{query}&quot;
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">

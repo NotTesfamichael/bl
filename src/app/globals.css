@@ -1,6 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Hide Next.js default loading spinner */
+[data-next-mark-loading] {
+  display: none !important;
+}
+
+/* Hide any Next.js logo elements */
+svg[data-next-mark-loading] {
+  display: none !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

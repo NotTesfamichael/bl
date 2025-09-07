@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import NextImage from "next/image";
 
 interface EditorToolbarProps {
   editor: Editor;
@@ -262,8 +263,9 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
       <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm">
-            <Image className="h-4 w-4" />
+          <Button variant="ghost" size="sm" aria-label="Add image">
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
+            <Image className="h-4 w-4" aria-hidden="true" />
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
@@ -288,12 +290,14 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
               <div className="grid gap-2">
                 <Label>Preview</Label>
                 <div className="border rounded-lg p-4 flex justify-center">
-                  <img
+                  <NextImage
                     src={imageUrl}
-                    alt="Preview"
+                    alt="Image preview"
+                    width={400}
+                    height={300}
                     className="max-w-full h-auto max-h-48 rounded"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
+                    onError={() => {
+                      // Handle error silently
                     }}
                   />
                 </div>

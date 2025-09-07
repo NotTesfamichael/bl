@@ -74,8 +74,9 @@ export function DeletePostButton({
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-gray-600">
-            Are you sure you want to delete <strong>"{postTitle}"</strong>? This
-            will permanently remove the post and all its data.
+            Are you sure you want to delete{" "}
+            <strong>&quot;{postTitle}&quot;</strong>? This will permanently
+            remove the post and all its data.
           </p>
         </div>
         <DialogFooter>

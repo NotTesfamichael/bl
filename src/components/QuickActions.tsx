@@ -5,7 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, SortAsc, SortDesc } from "lucide-react";
-import { Post } from "@prisma/client";
+interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  status: "DRAFT" | "PUBLISHED";
+  updatedAt: Date;
+  publishedAt: Date | null;
+}
 
 interface QuickActionsProps {
   posts: Post[];
@@ -45,8 +52,8 @@ export function QuickActions({
 
   const statusCounts = {
     all: posts.length,
-    published: posts.filter((p) => p.status === "PUBLISHED").length,
-    draft: posts.filter((p) => p.status === "DRAFT").length
+    published: posts.filter((p: Post) => p.status === "PUBLISHED").length,
+    draft: posts.filter((p: Post) => p.status === "DRAFT").length
   };
 
   return (
@@ -82,17 +89,27 @@ export function QuickActions({
               count: statusCounts.published
             },
             { key: "draft", label: "Drafts", count: statusCounts.draft }
-          ].map(({ key, label, count }) => (
-            <Button
-              key={key}
-              variant={selectedStatus === key ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleFilter(key)}
-              className="h-8"
-            >
-              {label} ({count})
-            </Button>
-          ))}
+          ].map(
+            ({
+              key,
+              label,
+              count
+            }: {
+              key: string;
+              label: string;
+              count: number;
+            }) => (
+              <Button
+                key={key}
+                variant={selectedStatus === key ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleFilter(key)}
+                className="h-8"
+              >
+                {label} ({count})
+              </Button>
+            )
+          )}
         </div>
 
         {/* Sort */}
@@ -104,7 +121,7 @@ export function QuickActions({
             { key: "title", label: "Title" },
             { key: "updatedAt", label: "Updated" },
             { key: "publishedAt", label: "Published" }
-          ].map(({ key, label }) => (
+          ].map(({ key, label }: { key: string; label: string }) => (
             <Button
               key={key}
               variant={sortField === key ? "default" : "outline"}

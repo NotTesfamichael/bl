@@ -11,16 +11,50 @@ import {
   Calendar,
   Clock,
   Heart,
-  Trash2,
   Home,
-  LogOut,
-  EyeOff
+  LogOut
 } from "lucide-react";
 import Link from "next/link";
 // // import { QuickActions } from "@/components/QuickActions";
 import { PostAnalytics } from "@/components/PostAnalytics";
 import { DeletePostButton } from "@/components/DeletePostButton";
 import { UnpublishPostButton } from "@/components/UnpublishPostButton";
+
+// Define the type for posts with relations based on the actual Prisma query result
+type PostWithRelations = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  status: "DRAFT" | "PUBLISHED";
+  createdAt: Date;
+  updatedAt: Date;
+  publishedAt: Date | null;
+  authorId: string;
+  tags: Array<{
+    tag: {
+      id: string;
+      name: string;
+      createdAt: Date;
+      updatedAt: Date;
+      slug: string;
+    };
+  }>;
+  views: Array<{
+    id: string;
+    postId: string;
+    count: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+  reactions: Array<{
+    id: string;
+    userId: string;
+    type: string;
+    createdAt: Date;
+    postId: string;
+  }>;
+};
 
 async function deletePost(postId: string) {
   "use server";
@@ -120,16 +154,21 @@ export default async function WriterPage() {
     }
   });
 
-  const publishedPosts = posts.filter((post) => post.status === "PUBLISHED");
-  const draftPosts = posts.filter((post) => post.status === "DRAFT");
+  const publishedPosts = posts.filter(
+    (post: PostWithRelations) => post.status === "PUBLISHED"
+  );
+  const draftPosts = posts.filter(
+    (post: PostWithRelations) => post.status === "DRAFT"
+  );
 
   // Calculate statistics
   const totalViews = publishedPosts.reduce(
-    (sum, post) => sum + (post.views[0]?.count || 0),
+    (sum: number, post: PostWithRelations) => sum + (post.views[0]?.count || 0),
     0
   );
   const totalLikes = publishedPosts.reduce(
-    (sum, post) => sum + post.reactions.filter((r) => r.type === "LIKE").length,
+    (sum: number, post: PostWithRelations) =>
+      sum + post.reactions.filter((r) => r.type === "LIKE").length,
     0
   );
 
@@ -255,7 +294,7 @@ export default async function WriterPage() {
               Published Posts ({publishedPosts.length})
             </h2>
             <div className="space-y-4">
-              {publishedPosts.map((post) => (
+              {publishedPosts.map((post: PostWithRelations) => (
                 <Card key={post.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -342,7 +381,7 @@ export default async function WriterPage() {
               Drafts ({draftPosts.length})
             </h2>
             <div className="space-y-4">
-              {draftPosts.map((post) => (
+              {draftPosts.map((post: PostWithRelations) => (
                 <Card key={post.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">

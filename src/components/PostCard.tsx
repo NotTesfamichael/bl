@@ -32,7 +32,8 @@ interface PostCardProps {
 export function PostCard({ post }: PostCardProps) {
   const viewCount = post.views?.[0]?.count || 0;
   const likeCount =
-    post.reactions?.filter((r) => r.type === "LIKE").length || 0;
+    post.reactions?.filter((r: { type: string }) => r.type === "LIKE").length ||
+    0;
 
   return (
     <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer hover:scale-[1.02] transition-transform group">
@@ -74,7 +75,7 @@ export function PostCard({ post }: PostCardProps) {
 
       <CardContent className="pt-0">
         <div className="flex flex-wrap gap-2">
-          {post.tags.map(({ tag }) => (
+          {post.tags.map(({ tag }: { tag: { name: string; slug: string } }) => (
             <Link
               key={tag.slug}
               href={`/tags/${tag.slug}`}

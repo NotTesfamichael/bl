@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Badge } from "@/components/ui/badge";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { X, Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
 
@@ -94,7 +92,7 @@ export function TagInput({
           if (tagsResponse.ok) {
             const allTags = await tagsResponse.json();
             const existingTag = allTags.find(
-              (tag: any) => tag.name.toLowerCase() === tagName.toLowerCase()
+              (tag: Tag) => tag.name.toLowerCase() === tagName.toLowerCase()
             );
             if (existingTag) {
               onAvailableTagsChange(allTags);
@@ -163,7 +161,7 @@ export function TagInput({
 
       {/* Selected Tags */}
       <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border border-gray-200 rounded-md">
-        {selectedTags.map((tag) => (
+        {selectedTags.map((tag: Tag) => (
           <div
             key={tag.id}
             className="inline-flex items-center gap-1 px-2 py-1 bg-[#556B2F] hover:bg-[#4a5a2a] text-white rounded-full text-sm group cursor-pointer"
@@ -192,7 +190,7 @@ export function TagInput({
           {showSuggestions &&
             (filteredTags.length > 0 || inputValue.trim()) && (
               <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                {filteredTags.map((tag) => (
+                {filteredTags.map((tag: Tag) => (
                   <button
                     key={tag.id}
                     type="button"

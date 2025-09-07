@@ -1,29 +1,60 @@
 version: "3.8"
 
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:16
-    container_name: notes-blog-db
+    container_name: notes-blog-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: notes_blog
-      POSTGRES_USER: notes_user
-      POSTGRES_PASSWORD: notes_password
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      POSTGRES_DB: ${POSTGRES_DB:-notes_blog}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - notes-blog-network
 
-  # Optional: pgAdmin for database management
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: notes-blog-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - notes-blog-network
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notes-blog-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-notes_blog}
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-your-nextauth-secret-key-change-this-in-production}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - notes-blog-network
+
 volumes:
   postgres_data:
-    driver: local
-  pgadmin_data:
-    driver: local
+  redis_data:
 
 networks:
   notes-blog-network:

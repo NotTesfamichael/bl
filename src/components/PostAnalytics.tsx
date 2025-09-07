@@ -21,9 +21,11 @@ interface PostAnalyticsProps {
 
 export function PostAnalytics({ post }: PostAnalyticsProps) {
   const viewCount = post.views[0]?.count || 0;
-  const likeCount = post.reactions.filter((r) => r.type === "LIKE").length;
+  const likeCount = post.reactions.filter(
+    (r: { type: string }) => r.type === "LIKE"
+  ).length;
   const commentCount = post.reactions.filter(
-    (r) => r.type === "COMMENT"
+    (r: { type: string }) => r.type === "COMMENT"
   ).length;
 
   return (

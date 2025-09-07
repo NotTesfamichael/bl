@@ -51,7 +51,7 @@ export function NewPostForm({
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
   const [content, setContent] = useState(post?.contentMarkdown || "");
   const [selectedTags, setSelectedTags] = useState<Tag[]>(
-    post?.tags?.map(({ tag }) => tag) || []
+    post?.tags?.map(({ tag }: { tag: Tag }) => tag) || []
   );
   const [availableTags, setAvailableTags] = useState<Tag[]>(allTags);
   const [isPreview, setIsPreview] = useState(false);
@@ -81,7 +81,7 @@ export function NewPostForm({
           contentMarkdown: content,
           excerpt,
           status: "DRAFT",
-          tagIds: selectedTags.map((tag) => tag.id)
+          tagIds: selectedTags.map((tag: Tag) => tag.id)
         })
       });
 
@@ -154,7 +154,7 @@ export function NewPostForm({
           slug: slug || generateSlug(title),
           contentMarkdown: content,
           excerpt,
-          tagIds: selectedTags.map((tag) => tag.id),
+          tagIds: selectedTags.map((tag: Tag) => tag.id),
           status: "PUBLISHED"
         })
       });

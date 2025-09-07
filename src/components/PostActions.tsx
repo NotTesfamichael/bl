@@ -56,7 +56,7 @@ export function PostActions({
           url: url
         });
         toast.success("Post shared!");
-      } catch (error) {
+      } catch {
         // User cancelled sharing
       }
     } else {

@@ -33,7 +33,7 @@ export default function LoginPage() {
         toast.success("Logged in successfully!");
         router.push("/writer");
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred during login");
     } finally {
       setIsLoading(false);
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/register"
                   className="text-[#556B2F] hover:underline"

@@ -57,7 +57,7 @@ async function main() {
 
   console.log(
     "✅ Created tags:",
-    tags.map((t) => t.name)
+    tags.map((t: { name: string }) => t.name)
   );
 
   // Sample markdown content
@@ -220,7 +220,7 @@ More content coming soon...`,
 
   console.log(
     "✅ Created posts:",
-    createdPosts.map((p) => p.title)
+    createdPosts.map((p: { title: string }) => p.title)
   );
 
   // Create post-tag relationships

@@ -11,6 +11,7 @@ A Medium-like blog platform built with Next.js 14, featuring a rich text editor,
 - **SEO**: Meta tags, RSS feed, and sitemap generation
 - **Responsive Design**: Mobile-first design with Tailwind CSS
 - **Code Highlighting**: Syntax highlighting for code blocks using Shiki
+- **Docker Support**: Complete Docker setup for development and production
 
 ## Tech Stack
 
@@ -21,8 +22,37 @@ A Medium-like blog platform built with Next.js 14, featuring a rich text editor,
 - **Database**: PostgreSQL + Prisma
 - **Authentication**: NextAuth.js
 - **Code Highlighting**: Shiki via rehype-pretty-code
+- **Containerization**: Docker + Docker Compose
 
-## Getting Started
+## Quick Start with Docker
+
+### Prerequisites
+
+- Docker and Docker Compose
+- Git
+
+### 🚀 One-Command Setup
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd notes-blog
+
+# Copy environment variables
+cp docker.env.example .env
+
+# Start the entire stack
+docker-compose -f docker-compose-dev.yml up --build
+```
+
+That's it! The application will be available at [http://localhost:3000](http://localhost:3000)
+
+### Default Credentials
+
+- **Email**: author@example.com
+- **Password**: password123
+
+## Development Setup
 
 ### Prerequisites
 
@@ -118,6 +148,84 @@ src/
     └── next-auth.d.ts     # NextAuth type definitions
 ```
 
+## Docker Commands
+
+### Development Environment
+
+```bash
+# Start development environment
+docker-compose -f docker-compose-dev.yml up --build
+
+# Start in background
+docker-compose -f docker-compose-dev.yml up -d --build
+
+# View logs
+docker-compose -f docker-compose-dev.yml logs -f
+
+# Stop development environment
+docker-compose -f docker-compose-dev.yml down
+
+# Rebuild and restart
+docker-compose -f docker-compose-dev.yml up --build --force-recreate
+```
+
+### Production Environment
+
+```bash
+# Start production environment
+docker-compose up --build
+
+# Start in background
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop production environment
+docker-compose down
+
+# Remove volumes (WARNING: This will delete all data)
+docker-compose down -v
+```
+
+### Database Management
+
+```bash
+# Access PostgreSQL database
+docker exec -it notes-blog-postgres-dev psql -U postgres -d notes_blog_dev
+
+# Run Prisma migrations
+docker exec -it notes-blog-app-dev npx prisma migrate deploy
+
+# Generate Prisma client
+docker exec -it notes-blog-app-dev npx prisma generate
+
+# Seed the database
+docker exec -it notes-blog-app-dev npm run db:seed
+
+# Open Prisma Studio
+docker exec -it notes-blog-app-dev npx prisma studio
+```
+
+### Container Management
+
+```bash
+# List running containers
+docker ps
+
+# View container logs
+docker logs notes-blog-app-dev
+
+# Execute commands in container
+docker exec -it notes-blog-app-dev sh
+
+# Remove all containers and volumes
+docker-compose down -v --remove-orphans
+
+# Clean up unused Docker resources
+docker system prune -a
+```
+
 ## Available Scripts
 
 - `npm run dev` - Start development server
@@ -162,6 +270,52 @@ src/
 - Tag filtering
 - Search functionality
 - SEO optimized
+
+## Docker Configuration
+
+### Files Overview
+
+- **`Dockerfile`**: Production-ready multi-stage build
+- **`Dockerfile.dev`**: Development environment with hot reload
+- **`docker-compose.yml`**: Production environment setup
+- **`docker-compose-dev.yml`**: Development environment setup
+- **`docker.env.example`**: Environment variables template
+
+### Environment Variables
+
+Copy `docker.env.example` to `.env` and configure:
+
+```env
+# Database
+DATABASE_URL="postgresql://postgres:postgres@postgres:5432/notes_blog_dev"
+POSTGRES_DB="notes_blog"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="postgres"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key-here"
+
+# OAuth (Optional)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+
+# Redis (Optional)
+REDIS_URL="redis://redis:6379"
+```
+
+### Ports
+
+- **3000**: Next.js application
+- **5432**: PostgreSQL database
+- **6379**: Redis cache
+
+### Volumes
+
+- **postgres_data**: PostgreSQL data persistence
+- **redis_data**: Redis data persistence
+- **node_modules**: Node.js dependencies (development)
+- **.next**: Next.js build cache (development)
 
 ## Database Schema
 

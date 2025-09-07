@@ -79,9 +79,9 @@ export function UnpublishPostButton({
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-gray-600">
-            Are you sure you want to unpublish <strong>"{postTitle}"</strong>?
-            This will move it back to your drafts and it won't be visible to the
-            public.
+            Are you sure you want to unpublish{" "}
+            <strong>&quot;{postTitle}&quot;</strong>? This will move it back to
+            your drafts and it won&apos;t be visible to the public.
           </p>
         </div>
         <DialogFooter>

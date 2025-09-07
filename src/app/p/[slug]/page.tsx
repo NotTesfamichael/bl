@@ -48,10 +48,13 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const viewCount = post.views[0]?.count || 0;
-  const likeCount = post.reactions.filter((r) => r.type === "LIKE").length;
+  const likeCount = post.reactions.filter(
+    (r: { type: string }) => r.type === "LIKE"
+  ).length;
   const isLiked = session?.user
     ? post.reactions.some(
-        (r) => r.userId === session.user.id && r.type === "LIKE"
+        (r: { userId: string; type: string }) =>
+          r.userId === session.user.id && r.type === "LIKE"
       )
     : false;
 
@@ -136,13 +139,15 @@ export default async function PostPage({ params }: PostPageProps) {
 
             {/* Tags */}
             <div className="flex flex-wrap gap-2">
-              {post.tags.map(({ tag }) => (
-                <Link key={tag.slug} href={`/tags/${tag.slug}`}>
-                  <Badge variant="secondary" className="hover:bg-blue-100">
-                    {tag.name}
-                  </Badge>
-                </Link>
-              ))}
+              {post.tags.map(
+                ({ tag }: { tag: { name: string; slug: string } }) => (
+                  <Link key={tag.slug} href={`/tags/${tag.slug}`}>
+                    <Badge variant="secondary" className="hover:bg-blue-100">
+                      {tag.name}
+                    </Badge>
+                  </Link>
+                )
+              )}
             </div>
           </header>
 
