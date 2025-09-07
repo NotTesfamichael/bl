@@ -20,10 +20,7 @@ export function UserDropdown() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="w-full sm:w-auto">
           <User className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">
-            {session.user?.name || "User"}
-          </span>
-          <span className="sm:hidden">User</span>
+          <span>{session.user?.name || "User"}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

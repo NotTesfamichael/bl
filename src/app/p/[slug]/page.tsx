@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PostActions } from "@/components/PostActions";
 import { CommentSection } from "@/components/CommentSection";
-import { Calendar, Clock, Eye, Heart, ArrowLeft, Edit } from "lucide-react";
+import { BlogPostHeaderActions } from "@/components/BlogPostHeaderActions";
+import { Header } from "@/components/Header";
+import { Calendar, Clock, Eye, Heart, Edit } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -64,53 +66,20 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <div className="min-h-screen bg-[#F5F0E1]">
-      {/* Header */}
-      <header className="border-b border-[#D4C4A8]">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="w-full sm:w-auto">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
-            </Link>
-            {session?.user && session.user.id === post.author.id && (
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-              >
-                <Link href={`/writer/${post.id}`}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Edit Post</span>
-                  <span className="sm:hidden">Edit</span>
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
-
+      <Header
+        blogPostActions={
+          <BlogPostHeaderActions postId={post.id} authorId={post.author.id} />
+        }
+      />
       {/* Article */}
-      <article className="container mx-auto px-4 py-8">
+      <article className="container mx-auto px-4 py-8 pt-16">
         <div className="max-w-4xl mx-auto">
           {/* Post Header */}
           <header className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-4">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black flex-1">
+            <div className="mb-4">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-black">
                 {post.title}
               </h1>
-              {session?.user && session.user.id === post.author.id && (
-                <Button asChild className="w-full sm:w-auto">
-                  <Link href={`/writer/${post.id}`}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Edit Post</span>
-                    <span className="sm:hidden">Edit</span>
-                  </Link>
-                </Button>
-              )}
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-xs sm:text-sm text-gray-600 mb-6">
@@ -177,7 +146,7 @@ export default async function PostPage({ params }: PostPageProps) {
                   })}
                 </div>
               </div>
-              
+
               {/* Comments Section */}
               <div id="comments" className="mt-6">
                 <CommentSection postId={post.id} />

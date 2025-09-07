@@ -5,25 +5,72 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { UserDropdown } from "@/components/UserDropdown";
+import { useLoginModal } from "@/contexts/LoginModalContext";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
-export function Header() {
+interface HeaderProps {
+  blogPostActions?: React.ReactNode;
+}
+
+export function Header({ blogPostActions }: HeaderProps = {}) {
   const { data: session } = useSession();
+  const pathname = usePathname();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const { openLoginModal } = useLoginModal();
+
+  // Check if we're on a blog post page
+  const isBlogPost = pathname.startsWith("/p/");
+
+  useEffect(() => {
+    if (!isBlogPost) {
+      setIsVisible(true);
+      return;
+    }
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Show header when scrolling up or at the top
+      if (currentScrollY < lastScrollY || currentScrollY < 100) {
+        setIsVisible(true);
+      }
+      // Hide header when scrolling down (but not at the very top)
+      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY, isBlogPost]);
 
   return (
-    <header className="bg-[#F5F0E1] border-b border-[#D4C4A8]">
-      <div className="container mx-auto px-4 py-4 sm:py-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-black">
+    <header
+      className={`bg-[#F5F0E1] border-b border-[#D4C4A8] transition-transform duration-300 ease-in-out ${
+        isBlogPost
+          ? `fixed top-0 left-0 right-0 z-50 ${
+              isVisible ? "translate-y-0" : "-translate-y-full"
+            }`
+          : "sticky top-0 z-50"
+      }`}
+    >
+      <div className="container mx-auto px-4 py-2 sm:py-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center">
+            <h1 className="text-xl sm:text-2xl font-bold text-black">
               <Link href="/" className="hover:text-[#556B2F] transition-colors">
-                Notes & Code Blog
+                kiyadur
               </Link>
             </h1>
-            <p className="text-black text-sm sm:text-base">
-              Share your thoughts and code with the world
-            </p>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
+            {isBlogPost && blogPostActions && (
+              <div className="mr-2">{blogPostActions}</div>
+            )}
             {session ? (
               <>
                 <Link href="/writer">
@@ -40,15 +87,14 @@ export function Header() {
                 <UserDropdown />
               </>
             ) : (
-              <Link href="/login">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                >
-                  Login
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                onClick={openLoginModal}
+              >
+                Login
+              </Button>
             )}
           </div>
         </div>

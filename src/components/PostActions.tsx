@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
-import { LoginModal } from "@/components/LoginModal";
+import { useLoginModal } from "@/contexts/LoginModalContext";
 import { ShareDropdown } from "@/components/ShareDropdown";
 
 interface PostActionsProps {
@@ -23,11 +23,11 @@ export function PostActions({
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLikedState, setIsLikedState] = useState(isLiked);
   const [isLiking, setIsLiking] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { openLoginModal } = useLoginModal();
 
   const handleLike = async () => {
     if (!session?.user) {
-      setShowLoginModal(true);
+      openLoginModal();
       return;
     }
 
@@ -59,7 +59,7 @@ export function PostActions({
 
   const handleComment = () => {
     if (!session?.user) {
-      setShowLoginModal(true);
+      openLoginModal();
       return;
     }
 
@@ -96,7 +96,7 @@ export function PostActions({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowLoginModal(true)}
+          onClick={openLoginModal}
           className="flex-1 sm:flex-none"
         >
           <Heart className="h-4 w-4 mr-1" />
@@ -121,7 +121,7 @@ export function PostActions({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowLoginModal(true)}
+          onClick={openLoginModal}
           className="flex-1 sm:flex-none"
         >
           <MessageCircle className="h-4 w-4 mr-1" />
@@ -130,14 +130,6 @@ export function PostActions({
       )}
 
       <ShareDropdown />
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        title="Login Required"
-        message="Please log in to like posts and comment"
-      />
     </div>
   );
 }

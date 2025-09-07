@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/SessionProvider";
+import { LoginModalProvider } from "@/contexts/LoginModalContext";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Notes & Code Blog",
+  title: "kiyadur",
   description: "Share your thoughts and code with the world"
 };
 
@@ -33,8 +34,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <SessionProvider>
-          {children}
-          <Toaster />
+          <LoginModalProvider>
+            {children}
+            <Toaster />
+          </LoginModalProvider>
         </SessionProvider>
       </body>
     </html>

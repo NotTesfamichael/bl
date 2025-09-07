@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Send, LogIn, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { LoginModal } from "@/components/LoginModal";
+import { useLoginModal } from "@/contexts/LoginModalContext";
 import { DeleteCommentDialog } from "@/components/DeleteCommentDialog";
 import { validateCommentContent } from "@/lib/validation";
 
@@ -33,7 +33,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { openLoginModal } = useLoginModal();
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     commentId: string | null;
@@ -62,7 +62,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
     e.preventDefault();
 
     if (!session?.user) {
-      setShowLoginModal(true);
+      openLoginModal();
       return;
     }
 
@@ -109,13 +109,18 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/posts/${postId}/comments/${deleteDialog.commentId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/posts/${postId}/comments/${deleteDialog.commentId}`,
+        {
+          method: "DELETE"
+        }
+      );
 
       if (response.ok) {
         // Remove the comment from the local state
-        setComments(comments.filter(comment => comment.id !== deleteDialog.commentId));
+        setComments(
+          comments.filter((comment) => comment.id !== deleteDialog.commentId)
+        );
         setDeleteDialog({ isOpen: false, commentId: null });
         toast.success("Comment deleted successfully!");
       } else {
@@ -168,7 +173,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
               disabled={isSubmitting}
             />
             <div className="flex justify-between items-center">
-              <span className={`text-xs ${newComment.trim().length >= 5 ? 'text-green-600' : 'text-gray-500'}`}>
+              <span
+                className={`text-xs ${
+                  newComment.trim().length >= 5
+                    ? "text-green-600"
+                    : "text-gray-500"
+                }`}
+              >
                 {newComment.length}/1000 characters
                 {newComment.trim().length < 5 && (
                   <span className="ml-1 text-red-500">
@@ -187,7 +198,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
           </form>
         ) : (
           <div className="text-center py-4">
-            <Button onClick={() => setShowLoginModal(true)} variant="outline">
+            <Button onClick={openLoginModal} variant="outline">
               <LogIn className="h-4 w-4 mr-2" />
               Log in to comment
             </Button>
@@ -220,16 +231,18 @@ export function CommentSection({ postId }: CommentSectionProps) {
                         })}
                       </span>
                     </div>
-                    {session?.user && (session.user as { id: string }).id === comment.author.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDeleteDialog(comment.id)}
-                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    )}
+                    {session?.user &&
+                      (session.user as { id: string }).id ===
+                        comment.author.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDeleteDialog(comment.id)}
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                   </div>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
                     {comment.content}
@@ -244,14 +257,6 @@ export function CommentSection({ postId }: CommentSectionProps) {
           </div>
         )}
       </div>
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        title="Login Required"
-        message="Please log in to add a comment"
-      />
 
       {/* Delete Comment Dialog */}
       <DeleteCommentDialog
