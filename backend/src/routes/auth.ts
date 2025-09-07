@@ -178,45 +178,59 @@ router.get("/verify", async (req: express.Request, res: express.Response) => {
   }
 });
 
-// Google OAuth routes
-router.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+// Google OAuth routes (only if configured)
+if (
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.GOOGLE_CLIENT_ID !== "" &&
+  process.env.GOOGLE_CLIENT_SECRET !== ""
+) {
+  router.get(
+    "/google",
+    passport.authenticate("google", { scope: ["profile", "email"] })
+  );
 
-router.get(
-  "/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=google_auth_failed`
-  }),
-  async (req: express.Request, res: express.Response) => {
-    try {
-      const user = req.user as any;
+  router.get(
+    "/google/callback",
+    passport.authenticate("google", {
+      failureRedirect: `${process.env.FRONTEND_URL}/login?error=google_auth_failed`
+    }),
+    async (req: express.Request, res: express.Response) => {
+      try {
+        const user = req.user as any;
 
-      if (!user) {
-        return res.redirect(
-          `${process.env.FRONTEND_URL}/login?error=user_not_found`
+        if (!user) {
+          return res.redirect(
+            `${process.env.FRONTEND_URL}/login?error=user_not_found`
+          );
+        }
+
+        // Generate JWT token for the user
+        const token = (jwt.sign as any)(
+          {
+            userId: user.id,
+            email: user.email,
+            role: user.role
+          },
+          process.env.JWT_SECRET!,
+          { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
         );
+
+        // Redirect to frontend with token
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
+        );
+      } catch (error) {
+        console.error("Google OAuth callback error:", error);
+        res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
       }
-
-      // Generate JWT token for the user
-      const token = (jwt.sign as any)(
-        {
-          userId: user.id,
-          email: user.email,
-          role: user.role
-        },
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-      );
-
-      // Redirect to frontend with token
-      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
-    } catch (error) {
-      console.error("Google OAuth callback error:", error);
-      res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
     }
-  }
-);
+  );
+} else {
+  // Return error if Google OAuth is not configured
+  router.get("/google", (req: express.Request, res: express.Response) => {
+    res.status(501).json({ error: "Google OAuth is not configured" });
+  });
+}
 
 export default router;
