@@ -78,8 +78,8 @@ export function LoginModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-md">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in-0 duration-200">
+      <Card className="w-full max-w-md animate-in zoom-in-95 duration-200">
         <CardHeader className="relative">
           <Button
             variant="ghost"

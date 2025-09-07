@@ -2,16 +2,8 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog";
-import { EyeOff, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EyeOff, AlertTriangle, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -52,66 +44,63 @@ export function UnpublishPostButton({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full h-9 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-        >
-          <EyeOff className="h-4 w-4 mr-1" />
-          Unpublish
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
-              <AlertTriangle className="h-5 w-5 text-orange-600" />
-            </div>
-            <div>
-              <DialogTitle className="text-left">Unpublish Post</DialogTitle>
-              <DialogDescription className="text-left">
-                This will move the post back to drafts.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-        <div className="py-4">
-          <p className="text-sm text-gray-600">
-            Are you sure you want to unpublish{" "}
-            <strong>&quot;{postTitle}&quot;</strong>? This will move it back to
-            your drafts and it won&apos;t be visible to the public.
-          </p>
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setIsOpen(false)}
-            disabled={isUnpublishing}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleUnpublish}
-            disabled={isUnpublishing}
-            className="bg-orange-600 hover:bg-orange-700"
-          >
-            {isUnpublishing ? (
-              <>
-                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Unpublishing...
-              </>
-            ) : (
-              <>
-                <EyeOff className="h-4 w-4 mr-2" />
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsOpen(true)}
+        className="w-full h-9 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+      >
+        <EyeOff className="h-4 w-4 mr-1" />
+        Unpublish
+      </Button>
+
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in-0 duration-200">
+          <Card className="w-full max-w-md animate-in zoom-in-95 duration-200">
+            <CardHeader className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(false)}
+                className="absolute right-4 top-4 h-8 w-8 p-0"
+                disabled={isUnpublishing}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <CardTitle className="text-xl text-orange-600 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
                 Unpublish Post
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-gray-600">
+                Are you sure you want to unpublish{" "}
+                <strong>&quot;{postTitle}&quot;</strong>? This will move it back to
+                your drafts and it won&apos;t be visible to the public.
+              </p>
+              
+              <div className="flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  disabled={isUnpublishing}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleUnpublish}
+                  disabled={isUnpublishing}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {isUnpublishing ? "Unpublishing..." : "Unpublish Post"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }

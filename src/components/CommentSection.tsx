@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Send, LogIn } from "lucide-react";
+import { MessageCircle, Send, LogIn, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { LoginModal } from "@/components/LoginModal";
+import { DeleteCommentDialog } from "@/components/DeleteCommentDialog";
 import { validateCommentContent } from "@/lib/validation";
 
 interface Comment {
@@ -34,6 +34,11 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    commentId: string | null;
+  }>({ isOpen: false, commentId: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchComments();
@@ -99,31 +104,59 @@ export function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
+  const handleDeleteComment = async () => {
+    if (!deleteDialog.commentId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/posts/${postId}/comments/${deleteDialog.commentId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        // Remove the comment from the local state
+        setComments(comments.filter(comment => comment.id !== deleteDialog.commentId));
+        setDeleteDialog({ isOpen: false, commentId: null });
+        toast.success("Comment deleted successfully!");
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Failed to delete comment");
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Failed to delete comment");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteDialog = (commentId: string) => {
+    setDeleteDialog({ isOpen: true, commentId });
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialog({ isOpen: false, commentId: null });
+  };
+
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            Comments
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-500">Loading comments...</p>
-        </CardContent>
-      </Card>
+      <div>
+        <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+          <MessageCircle className="h-5 w-5" />
+          Comments
+        </h3>
+        <p className="text-gray-500">Loading comments...</p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5" />
-          Comments ({comments.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div>
+      <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+        <MessageCircle className="h-5 w-5" />
+        Comments ({comments.length})
+      </h3>
+      <div className="space-y-6">
         {/* Comment Form */}
         {session?.user ? (
           <form onSubmit={handleSubmitComment} className="space-y-3">
@@ -135,12 +168,17 @@ export function CommentSection({ postId }: CommentSectionProps) {
               disabled={isSubmitting}
             />
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-500">
+              <span className={`text-xs ${newComment.trim().length >= 5 ? 'text-green-600' : 'text-gray-500'}`}>
                 {newComment.length}/1000 characters
+                {newComment.trim().length < 5 && (
+                  <span className="ml-1 text-red-500">
+                    (minimum 5 characters)
+                  </span>
+                )}
               </span>
               <Button
                 type="submit"
-                disabled={isSubmitting || !newComment.trim()}
+                disabled={isSubmitting || newComment.trim().length < 5}
               >
                 <Send className="h-4 w-4 mr-2" />
                 {isSubmitting ? "Posting..." : "Post Comment"}
@@ -148,10 +186,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
             </div>
           </form>
         ) : (
-          <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
-            <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-3">Want to join the conversation?</p>
-            <Button onClick={() => setShowLoginModal(true)}>
+          <div className="text-center py-4">
+            <Button onClick={() => setShowLoginModal(true)} variant="outline">
               <LogIn className="h-4 w-4 mr-2" />
               Log in to comment
             </Button>
@@ -173,15 +209,27 @@ export function CommentSection({ postId }: CommentSectionProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">
-                      {comment.author.name || "Anonymous"}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {formatDistanceToNow(new Date(comment.createdAt), {
-                        addSuffix: true
-                      })}
-                    </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">
+                        {comment.author.name || "Anonymous"}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDistanceToNow(new Date(comment.createdAt), {
+                          addSuffix: true
+                        })}
+                      </span>
+                    </div>
+                    {session?.user && (session.user as { id: string }).id === comment.author.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDeleteDialog(comment.id)}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
                     {comment.content}
@@ -191,12 +239,11 @@ export function CommentSection({ postId }: CommentSectionProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-6 text-gray-500">
-            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <div className="text-center py-4 text-gray-500">
             <p>No comments yet. Be the first to comment!</p>
           </div>
         )}
-      </CardContent>
+      </div>
 
       {/* Login Modal */}
       <LoginModal
@@ -205,6 +252,14 @@ export function CommentSection({ postId }: CommentSectionProps) {
         title="Login Required"
         message="Please log in to add a comment"
       />
-    </Card>
+
+      {/* Delete Comment Dialog */}
+      <DeleteCommentDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDeleteComment}
+        isDeleting={isDeleting}
+      />
+    </div>
   );
 }

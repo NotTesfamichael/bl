@@ -163,27 +163,29 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Post Footer */}
           <footer className="mt-12 pt-8 border-t">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <PostActions
-                postId={post.id}
-                initialLikeCount={likeCount}
-                isLiked={isLiked}
-              />
-              <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-right">
-                Last updated{" "}
-                {formatDistanceToNow(new Date(post.updatedAt), {
-                  addSuffix: true
-                })}
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <PostActions
+                  postId={post.id}
+                  initialLikeCount={likeCount}
+                  isLiked={isLiked}
+                />
+                <div className="text-xs sm:text-sm text-gray-500 text-center sm:text-right">
+                  Last updated{" "}
+                  {formatDistanceToNow(new Date(post.updatedAt), {
+                    addSuffix: true
+                  })}
+                </div>
+              </div>
+              
+              {/* Comments Section */}
+              <div id="comments" className="mt-6">
+                <CommentSection postId={post.id} />
               </div>
             </div>
           </footer>
         </div>
       </article>
-
-      {/* Comments Section */}
-      <div id="comments" className="mt-12">
-        <CommentSection postId={post.id} />
-      </div>
     </div>
   );
 }
