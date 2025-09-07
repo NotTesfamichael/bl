@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Starting database seeding...");
 
-  // Create Author User
-  const authorEmail = "author@example.com";
-  const authorPassword = "password123";
+  // Get user credentials from environment variables
+  const authorEmail = process.env.SEED_AUTHOR_EMAIL || "author@example.com";
+  const authorPassword = process.env.SEED_AUTHOR_PASSWORD || "password123";
 
   const existingAuthor = await prisma.user.findUnique({
     where: { email: authorEmail }
@@ -30,8 +30,8 @@ async function main() {
   }
 
   // Create Admin User
-  const adminEmail = "admin@example.com";
-  const adminPassword = "admin123";
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || "admin@example.com";
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || "admin123";
 
   const existingAdmin = await prisma.user.findUnique({
     where: { email: adminEmail }
@@ -80,9 +80,9 @@ async function main() {
   }
 
   console.log("🎉 Database seeding completed!");
-  console.log("\n📋 Default Users Created:");
-  console.log("👤 Author: author@example.com / password123");
-  console.log("👑 Admin: admin@example.com / admin123");
+  console.log("\n📋 Users Created:");
+  console.log(`👤 Author: ${authorEmail} / ${authorPassword}`);
+  console.log(`👑 Admin: ${adminEmail} / ${adminPassword}`);
 }
 
 main()

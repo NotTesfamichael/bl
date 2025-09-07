@@ -2,19 +2,31 @@
 
 ## Quick Setup
 
-For a complete fresh setup, run:
+### Development Setup (Default Credentials)
+
+For development with default credentials:
 
 ```bash
-./setup.sh
+./setup-dev.sh
+```
+
+### Production Setup (Secure Credentials)
+
+For production with custom credentials:
+
+```bash
+./setup-production.sh
 ```
 
 This script will:
 
 - Stop existing containers
 - Remove old database volumes
+- Prompt for secure credentials
 - Build and start all services
 - Run database migrations
-- Seed the database with default users
+- Seed the database with provided credentials
+- Clean up sensitive files
 
 ## Manual Setup
 
@@ -34,18 +46,36 @@ docker exec notes-blog-backend npx prisma migrate dev --name init
 
 ### 3. Seed Database
 
+For development (default credentials):
+
 ```bash
 docker exec notes-blog-backend npm run db:seed
 ```
 
+For production (custom credentials):
+
+```bash
+docker exec -e SEED_AUTHOR_EMAIL="your-author@email.com" \
+            -e SEED_AUTHOR_PASSWORD="your-secure-password" \
+            -e SEED_ADMIN_EMAIL="your-admin@email.com" \
+            -e SEED_ADMIN_PASSWORD="your-secure-admin-password" \
+            notes-blog-backend npm run db:seed
+```
+
 ## Default Users
 
-After seeding, you'll have these users available:
+### Development Users
+
+After seeding with default settings:
 
 | Role   | Email              | Password    |
 | ------ | ------------------ | ----------- |
 | Author | author@example.com | password123 |
 | Admin  | admin@example.com  | admin123    |
+
+### Production Users
+
+For production, use the setup script to provide your own secure credentials.
 
 ## Application URLs
 
@@ -83,6 +113,15 @@ The application uses a single `.env` file in the root directory with the followi
 - `DATABASE_URL`: PostgreSQL connection string
 - `NODE_ENV`: Environment (development/production)
 - `FRONTEND_URL`: Frontend URL for CORS
+
+### Seed Configuration (Optional)
+
+For custom user creation during seeding:
+
+- `SEED_AUTHOR_EMAIL`: Author user email
+- `SEED_AUTHOR_PASSWORD`: Author user password
+- `SEED_ADMIN_EMAIL`: Admin user email
+- `SEED_ADMIN_PASSWORD`: Admin user password
 
 ## Troubleshooting
 
