@@ -25,7 +25,7 @@ export function LoginModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +52,13 @@ export function LoginModal({
   };
 
   const handleGoogleSignIn = async () => {
-    toast.error("Google sign-in not yet implemented");
+    setIsLoading(true);
+    try {
+      loginWithGoogle();
+    } catch {
+      toast.error("An error occurred");
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;

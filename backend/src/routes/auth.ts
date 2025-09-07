@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import passport from "passport";
 import { PrismaClient } from "@prisma/client";
 import { body, validationResult } from "express-validator";
 import { AuthRequest } from "../types/auth";
@@ -176,5 +177,46 @@ router.get("/verify", async (req: express.Request, res: express.Response) => {
     return res.status(401).json({ error: "Invalid token" });
   }
 });
+
+// Google OAuth routes
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: `${process.env.FRONTEND_URL}/login?error=google_auth_failed`
+  }),
+  async (req: express.Request, res: express.Response) => {
+    try {
+      const user = req.user as any;
+
+      if (!user) {
+        return res.redirect(
+          `${process.env.FRONTEND_URL}/login?error=user_not_found`
+        );
+      }
+
+      // Generate JWT token for the user
+      const token = (jwt.sign as any)(
+        {
+          userId: user.id,
+          email: user.email,
+          role: user.role
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+
+      // Redirect to frontend with token
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+    } catch (error) {
+      console.error("Google OAuth callback error:", error);
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
+    }
+  }
+);
 
 export default router;

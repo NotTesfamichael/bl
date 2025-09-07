@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import session from "express-session";
 import { PrismaClient } from "@prisma/client";
 
 // Import routes
@@ -11,6 +12,9 @@ import postsRoutes from "./routes/posts";
 import tagsRoutes from "./routes/tags";
 import commentsRoutes from "./routes/comments";
 import healthRoutes from "./routes/health";
+
+// Import Passport configuration
+import passport from "./config/passport";
 
 // Load environment variables
 dotenv.config();
@@ -43,6 +47,23 @@ app.use(
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Session middleware
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || "fallback-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  })
+);
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoutes);

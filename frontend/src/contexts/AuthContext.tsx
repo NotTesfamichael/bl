@@ -22,6 +22,8 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => void;
+  handleGoogleCallback: (token: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -78,6 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGoogle = () => {
+    const googleAuthUrl = apiClient.getGoogleAuthUrl();
+    window.location.href = googleAuthUrl;
+  };
+
+  const handleGoogleCallback = async (token: string) => {
+    try {
+      const response = await apiClient.handleGoogleCallback(token);
+      setUser(response.user);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const logout = () => {
     apiClient.logout();
     setUser(null);
@@ -88,6 +104,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     login,
     register,
+    loginWithGoogle,
+    handleGoogleCallback,
     logout,
     isAuthenticated: !!user
   };

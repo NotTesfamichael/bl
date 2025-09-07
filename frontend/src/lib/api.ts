@@ -138,6 +138,18 @@ class ApiClient {
     this.setToken(null);
   }
 
+  // Google OAuth methods
+  getGoogleAuthUrl() {
+    return `${this.baseURL}/auth/google`;
+  }
+
+  async handleGoogleCallback(token: string) {
+    this.setToken(token);
+
+    // Verify the token and get user info
+    return this.verifyToken();
+  }
+
   // Posts endpoints
   async getPosts(params?: {
     page?: number;
@@ -168,7 +180,9 @@ class ApiClient {
     if (params?.status) searchParams.set("status", params.status);
 
     const query = searchParams.toString();
-    return this.request<PostsResponse>(`/posts/my-posts${query ? `?${query}` : ""}`);
+    return this.request<PostsResponse>(
+      `/posts/my-posts${query ? `?${query}` : ""}`
+    );
   }
 
   async getPostBySlug(slug: string) {
@@ -233,11 +247,23 @@ class ApiClient {
 
   // Comments endpoints
   async getComments(postId: string) {
-    return this.request<{ id: string; content: string; createdAt: string; author: { id: string; name: string } }[]>(`/comments/posts/${postId}`);
+    return this.request<
+      {
+        id: string;
+        content: string;
+        createdAt: string;
+        author: { id: string; name: string };
+      }[]
+    >(`/comments/posts/${postId}`);
   }
 
   async createComment(postId: string, content: string) {
-    return this.request<{ id: string; content: string; createdAt: string; author: { id: string; name: string } }>(`/comments/posts/${postId}`, {
+    return this.request<{
+      id: string;
+      content: string;
+      createdAt: string;
+      author: { id: string; name: string };
+    }>(`/comments/posts/${postId}`, {
       method: "POST",
       body: JSON.stringify({ content })
     });

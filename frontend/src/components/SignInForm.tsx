@@ -13,7 +13,7 @@ export function SignInForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,11 +33,9 @@ export function SignInForm() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      // Google sign-in would need to be implemented in the backend
-      toast.error("Google sign-in not yet implemented");
+      loginWithGoogle();
     } catch {
       toast.error("An error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
