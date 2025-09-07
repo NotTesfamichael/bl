@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,26 +13,18 @@ export function SignInForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false
-      });
-
-      if (result?.error) {
-        toast.error("Invalid credentials");
-      } else {
-        toast.success("Signed in successfully!");
-        router.push("/writer");
-      }
-    } catch {
-      toast.error("An error occurred");
+      await login(email, password);
+      toast.success("Signed in successfully!");
+      router.push("/writer");
+    } catch (error) {
+      toast.error("Invalid credentials");
     } finally {
       setIsLoading(false);
     }
@@ -41,9 +33,11 @@ export function SignInForm() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/writer" });
+      // Google sign-in would need to be implemented in the backend
+      toast.error("Google sign-in not yet implemented");
     } catch {
       toast.error("An error occurred");
+    } finally {
       setIsLoading(false);
     }
   };

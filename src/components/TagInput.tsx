@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { X, Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api";
 
 interface Tag {
   id: string;
@@ -82,55 +83,44 @@ export function TagInput({
 
     setIsCreating(true);
     try {
-      const response = await fetch("/api/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: tagName })
-      });
-
-      if (response.ok) {
-        const newTag = await response.json();
-        onAvailableTagsChange([...availableTags, newTag]);
-        onTagsChange([...selectedTags, newTag]);
-        setInputValue("");
-        setShowSuggestions(false);
-        toast.success(`Tag "${newTag.name}" created successfully!`);
-      } else if (response.status === 401) {
+      const newTag = await apiClient.createTag(tagName);
+      onAvailableTagsChange([...availableTags, newTag]);
+      onTagsChange([...selectedTags, newTag]);
+      setInputValue("");
+      setShowSuggestions(false);
+      toast.success(`Tag "${newTag.name}" created successfully!`);
+    } catch (error: any) {
+      if (
+        error.message.includes("401") ||
+        error.message.includes("Unauthorized")
+      ) {
         toast.error("Please log in to create tags");
         setInputValue("");
         setShowSuggestions(false);
-      } else if (response.status === 409) {
+      } else if (
+        error.message.includes("409") ||
+        error.message.includes("already exists")
+      ) {
         // Tag already exists, try to find it and add it
         toast.info(`Tag "${tagName}" already exists, adding it to your post`);
         // Refresh available tags to get the existing tag
         try {
-          const tagsResponse = await fetch("/api/tags");
-          if (tagsResponse.ok) {
-            const allTags = await tagsResponse.json();
-            const existingTag = allTags.find(
-              (tag: Tag) => tag.name.toLowerCase() === tagName.toLowerCase()
-            );
-            if (existingTag) {
-              onAvailableTagsChange(allTags);
-              onTagsChange([...selectedTags, existingTag]);
-              setInputValue("");
-              setShowSuggestions(false);
-            }
+          const allTags = await apiClient.getTags();
+          const existingTag = allTags.find(
+            (tag: Tag) => tag.name.toLowerCase() === tagName.toLowerCase()
+          );
+          if (existingTag) {
+            onAvailableTagsChange(allTags);
+            onTagsChange([...selectedTags, existingTag]);
+            setInputValue("");
+            setShowSuggestions(false);
           }
-        } catch (error) {
-          console.error("Error fetching tags:", error);
-          toast.error("Failed to add existing tag");
+        } catch (refreshError) {
+          console.error("Failed to refresh tags:", refreshError);
         }
       } else {
-        const error = await response.json();
-        console.error("Tag creation failed:", error);
-        toast.error(error.error || "Failed to create tag");
-        setInputValue("");
-        setShowSuggestions(false);
+        toast.error("Failed to create tag");
       }
-    } catch (error) {
-      console.error("Error creating tag:", error);
-      toast.error("Failed to create tag");
     } finally {
       setIsCreating(false);
     }

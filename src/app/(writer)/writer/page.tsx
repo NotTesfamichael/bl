@@ -1,153 +1,92 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
+"use client";
 
-// Force dynamic rendering to ensure posts are always up-to-date
-export const dynamic = "force-dynamic";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Eye, Calendar, Clock, Heart, Home } from "lucide-react";
 import Link from "next/link";
 import { UserDropdown } from "@/components/UserDropdown";
-// // import { QuickActions } from "@/components/QuickActions";
 import { PostAnalytics } from "@/components/PostAnalytics";
 import { DeletePostButton } from "@/components/DeletePostButton";
 import { UnpublishPostButton } from "@/components/UnpublishPostButton";
 
-// Define the type for posts with relations based on the actual Prisma query result
+// Define the type for posts with relations
 type PostWithRelations = {
   id: string;
   title: string;
   slug: string;
   excerpt: string | null;
   status: "DRAFT" | "PUBLISHED";
-  createdAt: Date;
-  updatedAt: Date;
-  publishedAt: Date | null;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
   authorId: string;
   tags: Array<{
     tag: {
       id: string;
       name: string;
-      createdAt: Date;
-      updatedAt: Date;
       slug: string;
     };
   }>;
   views: Array<{
     id: string;
-    postId: string;
     count: number;
-    createdAt: Date;
-    updatedAt: Date;
   }>;
   reactions: Array<{
     id: string;
-    userId: string;
     type: string;
-    createdAt: Date;
-    postId: string;
+    userId: string;
   }>;
 };
 
-async function deletePost(postId: string) {
-  "use server";
+export default function WriterPage() {
+  const { user, isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+  const [posts, setPosts] = useState<PostWithRelations[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
 
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
-  try {
-    // Verify the post belongs to the user
-    const post = await db.post.findFirst({
-      where: {
-        id: postId,
-        authorId: session.user.id
-      }
-    });
-
-    if (!post) {
-      console.error("Post not found:", postId);
-      return { error: "Post not found" };
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/login");
+      return;
     }
 
-    // Delete the post (this will cascade delete related records)
-    await db.post.delete({
-      where: { id: postId }
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting post:", error);
-    return { error: "Failed to delete post" };
-  }
-}
-
-async function unpublishPost(postId: string) {
-  "use server";
-
-  const session = await auth();
-  if (!session?.user) {
-    throw new Error("Unauthorized");
-  }
-
-  try {
-    // Verify the post belongs to the user and is published
-    const post = await db.post.findFirst({
-      where: {
-        id: postId,
-        authorId: session.user.id,
-        status: "PUBLISHED"
-      }
-    });
-
-    if (!post) {
-      console.error("Published post not found:", postId);
-      return { error: "Published post not found" };
+    if (isAuthenticated) {
+      fetchPosts();
     }
+  }, [isAuthenticated, loading, router]);
 
-    // Unpublish the post
-    await db.post.update({
-      where: { id: postId },
-      data: {
-        status: "DRAFT",
-        publishedAt: null
-      }
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error unpublishing post:", error);
-    return { error: "Failed to unpublish post" };
-  }
-}
-
-export default async function WriterPage() {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  const posts = await db.post.findMany({
-    where: {
-      authorId: session.user.id
-    },
-    include: {
-      tags: {
-        include: {
-          tag: true
-        }
-      },
-      views: true,
-      reactions: true
-    },
-    orderBy: {
-      updatedAt: "desc"
+  const fetchPosts = async () => {
+    try {
+      setLoadingPosts(true);
+      // Fetch user's posts (including drafts)
+      const response = await apiClient.getUserPosts({ limit: 100 });
+      setPosts(response.posts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoadingPosts(false);
     }
-  });
+  };
+
+  if (loading || loadingPosts) {
+    return (
+      <div className="min-h-screen bg-[#F5F0E1] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#556B2F] mx-auto mb-4"></div>
+          <p className="text-[#556B2F] font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   const publishedPosts = posts.filter(
     (post: PostWithRelations) => post.status === "PUBLISHED"
@@ -156,288 +95,337 @@ export default async function WriterPage() {
     (post: PostWithRelations) => post.status === "DRAFT"
   );
 
-  // Calculate statistics
-  const totalViews = publishedPosts.reduce(
-    (sum: number, post: PostWithRelations) => sum + (post.views[0]?.count || 0),
-    0
-  );
-  const totalLikes = publishedPosts.reduce(
-    (sum: number, post: PostWithRelations) =>
-      sum + post.reactions.filter((r) => r.type === "LIKE").length,
-    0
-  );
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  };
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return formatDate(dateString);
+  };
+
+  const getViewCount = (post: PostWithRelations) => {
+    return post.views[0]?.count || 0;
+  };
+
+  const getLikeCount = (post: PostWithRelations) => {
+    return post.reactions.filter((r) => r.type === "LIKE").length;
+  };
 
   return (
     <div className="min-h-screen bg-[#F5F0E1]">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-black">
-              Writer Dashboard
-            </h1>
-            <p className="text-black">Manage your posts and drafts</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
-            <Button variant="outline" asChild className="w-full sm:w-auto">
-              <Link href="/">
-                <Home className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Back to Home</span>
-                <span className="sm:hidden">Home</span>
-              </Link>
-            </Button>
-            <Button asChild className="w-full sm:w-auto">
+      {/* Header */}
+      <header className="bg-[#F5F0E1] border-b border-[#D4C4A8] sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center">
+              <h1 className="text-xl sm:text-2xl font-bold text-black">
+                <Link
+                  href="/"
+                  className="hover:text-[#556B2F] transition-colors"
+                >
+                  kiyadur
+                </Link>
+              </h1>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link href="/writer/new">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">New Post</span>
-                <span className="sm:hidden">New</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">New Post</span>
+                  <span className="sm:hidden">New</span>
+                </Button>
               </Link>
-            </Button>
-            <UserDropdown />
+              <UserDropdown />
+            </div>
           </div>
         </div>
+      </header>
 
-        {/* Statistics Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Eye className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
-                </div>
-                <div className="ml-3 md:ml-4">
-                  <p className="text-xs md:text-sm font-medium text-gray-600">
-                    Total Views
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold">
-                    {totalViews.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-black mb-2">
+              Welcome back, {user?.name}!
+            </h1>
+            <p className="text-gray-600">
+              Manage your posts and track your blog&apos;s performance.
+            </p>
+          </div>
 
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Heart className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  Total Posts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-black">
+                  {posts.length}
                 </div>
-                <div className="ml-3 md:ml-4">
-                  <p className="text-xs md:text-sm font-medium text-gray-600">
-                    Total Likes
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold">{totalLikes}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  Published
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {publishedPosts.length}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-600">
+                  Drafts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">
+                  {draftPosts.length}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Calendar className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
-                </div>
-                <div className="ml-3 md:ml-4">
-                  <p className="text-xs md:text-sm font-medium text-gray-600">
-                    Published
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold">
-                    {publishedPosts.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
-                </div>
-                <div className="ml-3 md:ml-4">
-                  <p className="text-xs md:text-sm font-medium text-gray-600">
-                    Drafts
-                  </p>
-                  <p className="text-lg md:text-2xl font-bold">
-                    {draftPosts.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions - Temporarily disabled to fix SSR issue */}
-        {/* <QuickActions
-        posts={posts}
-        onSearch={() => {}}
-        onFilter={() => {}}
-        onSort={() => {}}
-      /> */}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Published Posts */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4 text-black">
-              Published Posts ({publishedPosts.length})
-            </h2>
-            <div className="space-y-4">
-              {publishedPosts.map((post: PostWithRelations) => (
-                <Card key={`published-${post.id}`}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          <Link
-                            href={`/p/${post.slug}`}
-                            className="hover:text-blue-600 transition-colors"
-                          >
-                            {post.title}
-                          </Link>
+          {publishedPosts.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-black mb-4">
+                Published Posts
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {publishedPosts.map((post) => (
+                  <Card
+                    key={`published-${post.id}`}
+                    className="h-full flex flex-col"
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-lg line-clamp-2">
+                          {post.title}
                         </CardTitle>
-                        <PostAnalytics post={post} />
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
+                          Published
+                        </Badge>
                       </div>
-                      <Badge variant="default">Published</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {post.excerpt && (
-                      <p className="text-gray-600 mb-3 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="w-full h-9"
-                      >
-                        <Link href={`/writer/${post.id}`}>
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="w-full h-9"
-                      >
-                        <Link href={`/p/${post.slug}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Link>
-                      </Button>
-                      <div className="w-full">
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col space-y-4">
+                      {post.excerpt && (
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {post.excerpt}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tagWrapper, index) => (
+                          <Badge
+                            key={`${tagWrapper.tag.slug}-${index}`}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {tagWrapper.tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{getViewCount(post)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          <span>{getLikeCount(post)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            {formatRelativeTime(
+                              post.publishedAt || post.updatedAt
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Spacer to push buttons to bottom */}
+                      <div className="flex-1"></div>
+
+                      {/* Buttons aligned at bottom */}
+                      <div className="flex gap-2 mt-auto">
+                        <Button asChild size="sm" className="flex-1">
+                          <Link href={`/p/${post.slug}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Link>
+                        </Button>
+                        <Button
+                          asChild
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          <Link href={`/writer/${post.id}`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Link>
+                        </Button>
                         <UnpublishPostButton
                           postId={post.id}
                           postTitle={post.title}
-                          onUnpublish={unpublishPost}
+                          onUnpublish={async (postId: string) => {
+                            try {
+                              await apiClient.unpublishPost(postId);
+                              await fetchPosts();
+                              return { success: true };
+                            } catch (error) {
+                              return {
+                                success: false,
+                                error: "Failed to unpublish post"
+                              };
+                            }
+                          }}
                         />
                       </div>
-                      <div className="w-full">
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Draft Posts */}
+          {draftPosts.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-black mb-4">
+                Draft Posts
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {draftPosts.map((post) => (
+                  <Card
+                    key={`draft-${post.id}`}
+                    className="h-full flex flex-col"
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-lg line-clamp-2">
+                          {post.title}
+                        </CardTitle>
+                        <Badge
+                          variant="secondary"
+                          className="bg-orange-100 text-orange-800"
+                        >
+                          Draft
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col space-y-4">
+                      {post.excerpt && (
+                        <p className="text-sm text-gray-600 line-clamp-3">
+                          {post.excerpt}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tagWrapper, index) => (
+                          <Badge
+                            key={`${tagWrapper.tag.slug}-${index}`}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {tagWrapper.tag.name}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Clock className="h-3 w-3" />
+                        <span>
+                          Updated {formatRelativeTime(post.updatedAt)}
+                        </span>
+                      </div>
+
+                      {/* Spacer to push buttons to bottom */}
+                      <div className="flex-1"></div>
+
+                      {/* Buttons aligned at bottom */}
+                      <div className="flex gap-2 mt-auto">
+                        <Button asChild size="sm" className="flex-1">
+                          <Link href={`/writer/${post.id}`}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </Link>
+                        </Button>
                         <DeletePostButton
                           postId={post.id}
                           postTitle={post.title}
-                          onDelete={deletePost}
+                          onDelete={async (postId: string) => {
+                            try {
+                              await apiClient.deletePost(postId);
+                              await fetchPosts();
+                              return { success: true };
+                            } catch (error) {
+                              return {
+                                success: false,
+                                error: "Failed to delete post"
+                              };
+                            }
+                          }}
                         />
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {publishedPosts.length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-gray-500">No published posts yet.</p>
-                    <Button className="mt-4" asChild>
-                      <Link href="/writer/new">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create your first post
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Draft Posts */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4 text-black">
-              Drafts ({draftPosts.length})
-            </h2>
-            <div className="space-y-4">
-              {draftPosts.map((post: PostWithRelations) => (
-                <Card key={`draft-${post.id}`}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">
-                          <Link
-                            href={`/writer/${post.id}`}
-                            className="hover:text-blue-600 transition-colors"
-                          >
-                            {post.title || "Untitled Draft"}
-                          </Link>
-                        </CardTitle>
-                        <PostAnalytics post={post} />
-                      </div>
-                      <Badge variant="secondary">Draft</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {post.excerpt && (
-                      <p className="text-gray-600 mb-3 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-                    )}
-                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="w-full h-9"
-                      >
-                        <Link href={`/writer/${post.id}`}>
-                          <Edit className="h-4 w-4 mr-1" />
-                          <span className="hidden sm:inline">
-                            Continue Editing
-                          </span>
-                          <span className="sm:hidden">Edit</span>
-                        </Link>
-                      </Button>
-                      <div className="w-full">
-                        <DeletePostButton
-                          postId={post.id}
-                          postTitle={post.title || "Untitled Draft"}
-                          onDelete={deletePost}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {draftPosts.length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-gray-500">No drafts yet.</p>
-                    <Button className="mt-4" asChild>
-                      <Link href="/writer/new">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Start a new draft
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+          {/* Empty State */}
+          {posts.length === 0 && (
+            <div className="text-center py-12">
+              <h2 className="text-2xl font-semibold text-black mb-4">
+                No posts yet
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Start writing your first post to share your thoughts with the
+                world!
+              </p>
+              <Button asChild>
+                <Link href="/writer/new">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create your first post
+                </Link>
+              </Button>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

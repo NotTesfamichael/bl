@@ -4,58 +4,20 @@ import { SearchBar } from "@/components/SearchBar";
 import { Header } from "@/components/Header";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { db } from "@/lib/db";
-import { safeDbOperation } from "@/lib/health";
+import { apiClient } from "@/lib/api";
 
 // Force dynamic rendering to ensure posts are always up-to-date
 export const dynamic = "force-dynamic";
 
 async function getPosts() {
   try {
-    const result = await safeDbOperation(async () => {
-      return await db.post.findMany({
-        where: {
-          status: "PUBLISHED"
-        },
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              email: true
-            }
-          },
-          tags: {
-            include: {
-              tag: true
-            }
-          },
-          views: true,
-          reactions: true
-        },
-        orderBy: {
-          publishedAt: "desc"
-        },
-        take: 10
-      });
+    const response = await apiClient.getPosts({
+      status: "PUBLISHED",
+      limit: 10
     });
-
-    if (result === null) {
-      throw new Error("Database connection failed");
-    }
-
-    return { posts: result, pagination: { total: result.length, pages: 1 } };
+    return response;
   } catch (error) {
     console.error("Error fetching posts:", error);
-
-    // If it's a database connection error, throw it to trigger error boundary
-    if (
-      error instanceof Error &&
-      error.message.includes("Database connection failed")
-    ) {
-      throw error;
-    }
-
     return { posts: [], pagination: { total: 0, pages: 0 } };
   }
 }

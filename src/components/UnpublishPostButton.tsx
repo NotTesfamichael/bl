@@ -31,7 +31,7 @@ export function UnpublishPostButton({
       if (result?.success) {
         toast.success(`"${postTitle}" unpublished successfully!`);
         setIsOpen(false);
-        router.refresh(); // Refresh the page to show updated list
+        // The parent component will handle refreshing the list
       } else {
         toast.error(result?.error || "Failed to unpublish post.");
       }
@@ -49,7 +49,7 @@ export function UnpublishPostButton({
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="w-full h-9 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+        className="flex-1 h-9 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
       >
         <EyeOff className="h-4 w-4 mr-1" />
         Unpublish
@@ -76,10 +76,10 @@ export function UnpublishPostButton({
             <CardContent className="space-y-4">
               <p className="text-gray-600">
                 Are you sure you want to unpublish{" "}
-                <strong>&quot;{postTitle}&quot;</strong>? This will move it back to
-                your drafts and it won&apos;t be visible to the public.
+                <strong>&quot;{postTitle}&quot;</strong>? This will move it back
+                to your drafts and it won&apos;t be visible to the public.
               </p>
-              
+
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"

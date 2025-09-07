@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,6 +11,7 @@ import { formatDistanceToNow } from "date-fns";
 import { useLoginModal } from "@/contexts/LoginModalContext";
 import { DeleteCommentDialog } from "@/components/DeleteCommentDialog";
 import { validateCommentContent } from "@/lib/validation";
+import { apiClient } from "@/lib/api";
 
 interface Comment {
   id: string;
@@ -28,7 +29,7 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ postId }: CommentSectionProps) {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,11 +47,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`/api/posts/${postId}/comments`);
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data);
-      }
+      const data = await apiClient.getComments(postId);
+      setComments(data);
     } catch (error) {
       console.error("Error fetching comments:", error);
     } finally {
@@ -61,7 +59,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!session?.user) {
+    if (!isAuthenticated) {
       openLoginModal();
       return;
     }
@@ -75,27 +73,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/posts/${postId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ content: newComment })
-      });
-
-      if (response.ok) {
-        const comment = await response.json();
-        setComments([comment, ...comments]);
-        setNewComment("");
-        toast.success("Comment added successfully!");
-      } else {
-        const error = await response.json();
-        if (error.details && error.details.length > 0) {
-          toast.error(error.details[0]);
-        } else {
-          toast.error(error.error || "Failed to add comment");
-        }
-      }
+      const comment = await apiClient.createComment(postId, newComment);
+      setComments([comment, ...comments]);
+      setNewComment("");
+      toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error submitting comment:", error);
       toast.error("Failed to add comment");
@@ -109,24 +90,14 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(
-        `/api/posts/${postId}/comments/${deleteDialog.commentId}`,
-        {
-          method: "DELETE"
-        }
-      );
+      await apiClient.deleteComment(deleteDialog.commentId);
 
-      if (response.ok) {
-        // Remove the comment from the local state
-        setComments(
-          comments.filter((comment) => comment.id !== deleteDialog.commentId)
-        );
-        setDeleteDialog({ isOpen: false, commentId: null });
-        toast.success("Comment deleted successfully!");
-      } else {
-        const error = await response.json();
-        toast.error(error.error || "Failed to delete comment");
-      }
+      // Remove the comment from the local state
+      setComments(
+        comments.filter((comment) => comment.id !== deleteDialog.commentId)
+      );
+      setDeleteDialog({ isOpen: false, commentId: null });
+      toast.success("Comment deleted successfully!");
     } catch (error) {
       console.error("Error deleting comment:", error);
       toast.error("Failed to delete comment");
@@ -163,7 +134,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
       </h3>
       <div className="space-y-6">
         {/* Comment Form */}
-        {session?.user ? (
+        {isAuthenticated ? (
           <form onSubmit={handleSubmitComment} className="space-y-3">
             <Textarea
               value={newComment}
@@ -231,18 +202,16 @@ export function CommentSection({ postId }: CommentSectionProps) {
                         })}
                       </span>
                     </div>
-                    {session?.user &&
-                      (session.user as { id: string }).id ===
-                        comment.author.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openDeleteDialog(comment.id)}
-                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      )}
+                    {isAuthenticated && user?.id === comment.author.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDeleteDialog(comment.id)}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                   <p className="text-sm text-gray-700 whitespace-pre-wrap">
                     {comment.content}

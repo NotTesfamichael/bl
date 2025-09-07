@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import Link from "next/link";
@@ -14,10 +14,10 @@ export function BlogPostHeaderActions({
   postId,
   authorId
 }: BlogPostHeaderActionsProps) {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
 
   // Only show edit button if user is the author
-  if (!session?.user || session.user.id !== authorId) {
+  if (!isAuthenticated || user?.id !== authorId) {
     return null;
   }
 

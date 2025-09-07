@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,19 +16,20 @@ interface LoginModalProps {
   message?: string;
 }
 
-export function LoginModal({ 
-  isOpen, 
-  onClose, 
+export function LoginModal({
+  isOpen,
+  onClose,
   title = "Login Required",
   message = "Please log in to continue"
 }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
@@ -36,43 +37,22 @@ export function LoginModal({
 
     setIsLoading(true);
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        toast.error("Invalid email or password");
-      } else {
-        toast.success("Logged in successfully!");
-        onClose();
-        // Reset form
-        setEmail("");
-        setPassword("");
-      }
+      await login(email, password);
+      toast.success("Logged in successfully!");
+      onClose();
+      // Reset form
+      setEmail("");
+      setPassword("");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please try again.");
+      toast.error("Invalid email or password");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    try {
-      await signIn("google", { 
-        callbackUrl: window.location.href,
-        redirect: false 
-      });
-      onClose();
-    } catch (error) {
-      console.error("Google sign in error:", error);
-      toast.error("Google sign in failed");
-    } finally {
-      setIsLoading(false);
-    }
+    toast.error("Google sign-in not yet implemented");
   };
 
   if (!isOpen) return null;
@@ -110,7 +90,7 @@ export function LoginModal({
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -128,11 +108,7 @@ export function LoginModal({
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading}>
               <LogIn className="h-4 w-4 mr-2" />
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>

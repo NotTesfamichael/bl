@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { signOut } from "next-auth/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut, Home } from "lucide-react";
@@ -9,18 +9,21 @@ import Link from "next/link";
 
 export default function LogoutPage() {
   const router = useRouter();
+  const { logout } = useAuth();
 
   useEffect(() => {
     // Auto-logout after 3 seconds
     const timer = setTimeout(() => {
-      signOut({ callbackUrl: "/" });
+      logout();
+      router.push("/");
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [logout, router]);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: "/" });
+    logout();
+    router.push("/");
   };
 
   const handleCancel = () => {

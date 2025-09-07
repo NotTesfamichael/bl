@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,23 +8,24 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function UserDropdown() {
-  const { data: session } = useSession();
+  const { user, logout } = useAuth();
 
-  if (!session) return null;
+  if (!user) return null;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="w-full sm:w-auto">
           <User className="h-4 w-4 mr-2" />
-          <span>{session.user?.name || "User"}</span>
+          <span>{user.name || "User"}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={logout}
           className="text-red-600 focus:text-red-600 focus:bg-red-50"
         >
           <LogOut className="h-4 w-4 mr-2" />

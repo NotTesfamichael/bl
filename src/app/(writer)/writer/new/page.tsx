@@ -1,21 +1,54 @@
-import { auth } from "@/lib/auth";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import { NewPostForm } from "@/components/NewPostForm";
-import { db } from "@/lib/db";
+import { apiClient } from "@/lib/api";
 
-export default async function NewPostPage() {
-  const session = await auth();
+export default function NewPostPage() {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+  const [allTags, setAllTags] = useState<any[]>([]);
+  const [loadingTags, setLoadingTags] = useState(true);
 
-  if (!session?.user) {
-    redirect("/login");
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    if (isAuthenticated) {
+      fetchTags();
+    }
+  }, [isAuthenticated, loading, router]);
+
+  const fetchTags = async () => {
+    try {
+      setLoadingTags(true);
+      const tags = await apiClient.getTags();
+      setAllTags(tags);
+    } catch (error) {
+      console.error("Error fetching tags:", error);
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
+  if (loading || loadingTags) {
+    return (
+      <div className="min-h-screen bg-[#F5F0E1] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#556B2F] mx-auto mb-4"></div>
+          <p className="text-[#556B2F] font-medium">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Get all available tags
-  const allTags = await db.tag.findMany({
-    orderBy: {
-      name: "asc"
-    }
-  });
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f0e1]">

@@ -30,20 +30,18 @@ interface SearchPost {
 }
 
 async function getSearchResults(query: string) {
-  const response = await fetch(
-    `${
-      process.env.NEXTAUTH_URL
-    }/api/posts?status=PUBLISHED&search=${encodeURIComponent(query)}&limit=20`,
-    {
-      cache: "no-store"
-    }
-  );
-
-  if (!response.ok) {
+  try {
+    const { apiClient } = await import("@/lib/api");
+    const response = await apiClient.getPosts({
+      status: "PUBLISHED",
+      search: query,
+      limit: 20
+    });
+    return response;
+  } catch (error) {
+    console.error("Error fetching search results:", error);
     return { posts: [], pagination: { total: 0, pages: 0 } };
   }
-
-  return response.json();
 }
 
 async function SearchResults({ query }: { query: string }) {

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLoginModal } from "@/contexts/LoginModalContext";
 import { ShareDropdown } from "@/components/ShareDropdown";
+import { apiClient } from "@/lib/api";
 
 interface PostActionsProps {
   postId: string;
@@ -19,14 +20,14 @@ export function PostActions({
   initialLikeCount,
   isLiked = false
 }: PostActionsProps) {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLikedState, setIsLikedState] = useState(isLiked);
   const [isLiking, setIsLiking] = useState(false);
   const { openLoginModal } = useLoginModal();
 
   const handleLike = async () => {
-    if (!session?.user) {
+    if (!isAuthenticated) {
       openLoginModal();
       return;
     }
@@ -35,20 +36,12 @@ export function PostActions({
 
     setIsLiking(true);
     try {
-      const response = await fetch(`/api/posts/${postId}/like`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
+      const response = await apiClient.likePost(postId);
 
-      if (response.ok) {
-        const newLikeCount = isLikedState ? likeCount - 1 : likeCount + 1;
-        setLikeCount(newLikeCount);
-        setIsLikedState(!isLikedState);
-        toast.success(isLikedState ? "Removed like" : "Liked post!");
-      } else {
-        const error = await response.json();
-        toast.error(error.error || "Failed to like post");
-      }
+      const newLikeCount = isLikedState ? likeCount - 1 : likeCount + 1;
+      setLikeCount(newLikeCount);
+      setIsLikedState(!isLikedState);
+      toast.success(isLikedState ? "Removed like" : "Liked post!");
     } catch (error) {
       console.error("Error liking post:", error);
       toast.error("Failed to like post");
@@ -58,7 +51,7 @@ export function PostActions({
   };
 
   const handleComment = () => {
-    if (!session?.user) {
+    if (!isAuthenticated) {
       openLoginModal();
       return;
     }
@@ -74,7 +67,7 @@ export function PostActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-      {session?.user ? (
+      {isAuthenticated ? (
         <Button
           variant="outline"
           size="sm"
@@ -107,7 +100,7 @@ export function PostActions({
         </Button>
       )}
 
-      {session?.user ? (
+      {isAuthenticated ? (
         <Button
           variant="outline"
           size="sm"

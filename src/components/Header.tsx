@@ -1,11 +1,11 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { UserDropdown } from "@/components/UserDropdown";
 import { useLoginModal } from "@/contexts/LoginModalContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({ blogPostActions }: HeaderProps = {}) {
-  const { data: session } = useSession();
+  const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -71,7 +71,7 @@ export function Header({ blogPostActions }: HeaderProps = {}) {
             {isBlogPost && blogPostActions && (
               <div className="mr-2">{blogPostActions}</div>
             )}
-            {session ? (
+            {isAuthenticated ? (
               <>
                 <Link href="/writer">
                   <Button

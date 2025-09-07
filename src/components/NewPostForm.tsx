@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, Eye, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { generateSlug } from "@/lib/markdown";
+import { apiClient } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Tag {
   id: string;
@@ -38,14 +40,17 @@ interface NewPostFormProps {
   post?: Post;
   allTags?: Tag[];
   isEditing?: boolean;
+  onPostSaved?: () => void; // Callback to refresh posts list
 }
 
 export function NewPostForm({
   post,
   allTags = [],
-  isEditing = false
+  isEditing = false,
+  onPostSaved
 }: NewPostFormProps) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [title, setTitle] = useState(post?.title || "");
   const [slug, setSlug] = useState(post?.slug || "");
   const [excerpt, setExcerpt] = useState(post?.excerpt || "");
@@ -68,42 +73,57 @@ export function NewPostForm({
   const saveDraft = useCallback(async () => {
     if (!title || !content) return;
 
+    if (!isAuthenticated) {
+      toast.error("Please log in to save your draft");
+      router.push("/login");
+      return;
+    }
+
     try {
-      const url = isEditing ? `/api/posts/${post?.id}` : "/api/posts";
-      const method = isEditing ? "PUT" : "POST";
+      const postData = {
+        title,
+        slug: slug || generateSlug(title),
+        contentMarkdown: content,
+        excerpt,
+        status: "DRAFT" as const,
+        tagIds: selectedTags.map((tag: Tag) => tag.id)
+      };
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          slug: slug || generateSlug(title),
-          contentMarkdown: content,
-          excerpt,
-          status: "DRAFT",
-          tagIds: selectedTags.map((tag: Tag) => tag.id)
-        })
-      });
+      console.log("Saving draft with data:", postData);
 
-      if (response.ok) {
-        const postData = await response.json();
-        toast.success(isEditing ? "Post updated successfully!" : "Draft saved");
-
-        // Clean up unused tags after saving
-        try {
-          await fetch("/api/tags/cleanup", { method: "POST" });
-        } catch (error) {
-          console.error("Failed to cleanup unused tags:", error);
-        }
-
-        if (!isEditing) {
-          router.push("/writer");
-        }
-        return postData;
+      let response;
+      if (isEditing && post?.id) {
+        response = await apiClient.updatePost(post.id, postData);
+      } else {
+        response = await apiClient.createPost(postData);
       }
+
+      toast.success(isEditing ? "Post updated successfully!" : "Draft saved");
+
+      // Note: Tag cleanup is handled by admin users separately
+
+      // Call the callback to refresh posts list
+      if (onPostSaved) {
+        onPostSaved();
+      }
+
+      if (!isEditing) {
+        router.push("/writer");
+      }
+      return response;
     } catch (error) {
       console.error("Failed to save draft:", error);
-      toast.error("Failed to save draft");
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save draft";
+
+      // Check if it's an authentication error
+      if (errorMessage.includes("401") || errorMessage.includes("403")) {
+        toast.error("Please log in again to save your draft");
+      } else if (errorMessage.includes("Validation failed")) {
+        toast.error("Please check your post content and try again");
+      } else {
+        toast.error("Failed to save draft");
+      }
     }
   }, [
     title,
@@ -113,15 +133,23 @@ export function NewPostForm({
     selectedTags,
     isEditing,
     post?.id,
-    router
+    router,
+    isAuthenticated,
+    onPostSaved
   ]);
 
   // Load available tags
   useEffect(() => {
-    fetch("/api/tags")
-      .then((res) => res.json())
-      .then((data) => setAvailableTags(data))
-      .catch(console.error);
+    const loadTags = async () => {
+      try {
+        const tags = await apiClient.getTags();
+        setAvailableTags(tags);
+      } catch (error) {
+        console.error("Error loading tags:", error);
+      }
+    };
+
+    loadTags();
   }, []);
 
   // Autosave every 3 seconds
@@ -141,44 +169,43 @@ export function NewPostForm({
       return;
     }
 
+    if (!isAuthenticated) {
+      toast.error("Please log in to publish your post");
+      router.push("/login");
+      return;
+    }
+
     setIsPublishing(true);
     try {
-      const url = isEditing ? `/api/posts/${post?.id}` : "/api/posts";
-      const method = isEditing ? "PUT" : "POST";
+      const postData = {
+        title,
+        slug: slug || generateSlug(title),
+        contentMarkdown: content,
+        excerpt,
+        tagIds: selectedTags.map((tag: Tag) => tag.id),
+        status: "PUBLISHED" as const
+      };
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          slug: slug || generateSlug(title),
-          contentMarkdown: content,
-          excerpt,
-          tagIds: selectedTags.map((tag: Tag) => tag.id),
-          status: "PUBLISHED"
-        })
-      });
-
-      if (response.ok) {
-        const postData = await response.json();
-        toast.success(
-          isEditing
-            ? "Post updated and published!"
-            : "Post published successfully!"
-        );
-
-        // Clean up unused tags after publishing
-        try {
-          await fetch("/api/tags/cleanup", { method: "POST" });
-        } catch (error) {
-          console.error("Failed to cleanup unused tags:", error);
-        }
-
-        router.push(`/p/${postData.slug}`);
+      let response;
+      if (isEditing && post?.id) {
+        response = await apiClient.updatePost(post.id, postData);
       } else {
-        const error = await response.json();
-        toast.error(error.message || "Failed to publish post");
+        response = await apiClient.createPost(postData);
       }
+      toast.success(
+        isEditing
+          ? "Post updated and published!"
+          : "Post published successfully!"
+      );
+
+      // Note: Tag cleanup is handled by admin users separately
+
+      // Call the callback to refresh posts list
+      if (onPostSaved) {
+        onPostSaved();
+      }
+
+      router.push(`/p/${response.slug}`);
     } catch (error) {
       console.error("Failed to publish post:", error);
       toast.error("Failed to publish post");

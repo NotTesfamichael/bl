@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, AlertTriangle, X } from "lucide-react";
+import { toast } from "sonner";
 
 interface DeletePostButtonProps {
   postId: string;
@@ -24,15 +25,15 @@ export function DeletePostButton({
     try {
       const result = await onDelete(postId);
       if (result.success) {
+        toast.success(`"${postTitle}" deleted successfully!`);
         setIsOpen(false);
-        // Refresh the page to show updated list
-        window.location.reload();
+        // The parent component will handle refreshing the list
       } else {
-        alert(result.error || "Failed to delete post");
+        toast.error(result.error || "Failed to delete post");
       }
     } catch (error) {
       console.error("Error deleting post:", error);
-      alert("Failed to delete post");
+      toast.error("Failed to delete post");
     } finally {
       setIsDeleting(false);
     }
@@ -44,7 +45,7 @@ export function DeletePostButton({
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="w-full h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+        className="flex-1 h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
       >
         <Trash2 className="h-4 w-4 mr-1" />
         Delete
@@ -74,7 +75,7 @@ export function DeletePostButton({
                 <strong>&quot;{postTitle}&quot;</strong>? This will permanently
                 remove the post and all its data. This action cannot be undone.
               </p>
-              
+
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"
