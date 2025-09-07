@@ -7,17 +7,9 @@ export const dynamic = "force-dynamic";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Edit,
-  Eye,
-  Calendar,
-  Clock,
-  Heart,
-  Home,
-  LogOut
-} from "lucide-react";
+import { Plus, Edit, Eye, Calendar, Clock, Heart, Home } from "lucide-react";
 import Link from "next/link";
+import { UserDropdown } from "@/components/UserDropdown";
 // // import { QuickActions } from "@/components/QuickActions";
 import { PostAnalytics } from "@/components/PostAnalytics";
 import { DeletePostButton } from "@/components/DeletePostButton";
@@ -200,12 +192,7 @@ export default async function WriterPage() {
                 <span className="sm:hidden">New</span>
               </Link>
             </Button>
-            <Button variant="outline" asChild className="w-full sm:w-auto">
-              <Link href="/logout">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Link>
-            </Button>
+            <UserDropdown />
           </div>
         </div>
 

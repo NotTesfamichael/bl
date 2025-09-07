@@ -2,8 +2,9 @@
 
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Plus, LogOut } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
+import { UserDropdown } from "@/components/UserDropdown";
 
 export function Header() {
   const { data: session } = useSession();
@@ -36,17 +37,7 @@ export function Header() {
                     <span className="sm:hidden">Write</span>
                   </Button>
                 </Link>
-                <Link href="/logout">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">Logout</span>
-                    <span className="sm:hidden">Logout</span>
-                  </Button>
-                </Link>
+                <UserDropdown />
               </>
             ) : (
               <Link href="/login">
