@@ -11,7 +11,12 @@ export interface CacheOptions {
 const defaultKeyGenerator = (req: Request): string => {
   const baseKey = `${req.method}:${req.originalUrl}`;
   const queryString = req.query ? JSON.stringify(req.query) : "";
-  return queryString ? `${baseKey}:${queryString}` : baseKey;
+  const authHeader = req.headers.authorization
+    ? `:auth:${req.headers.authorization}`
+    : "";
+  return queryString
+    ? `${baseKey}:${queryString}${authHeader}`
+    : `${baseKey}${authHeader}`;
 };
 
 // Cache middleware factory
@@ -127,10 +132,9 @@ export const cacheInvalidation = {
   // Invalidate post-related caches
   async invalidatePost(postId: string): Promise<void> {
     const patterns = [
-      `post:${postId}`,
-      "posts:*",
-      `comments:${postId}`,
-      "search:*"
+      `*posts*`, // Match all posts-related cache keys
+      `*comments*${postId}*`,
+      `*search*`
     ];
 
     for (const pattern of patterns) {
@@ -148,8 +152,8 @@ export const cacheInvalidation = {
   // Invalidate user-related caches
   async invalidateUser(userId: string): Promise<void> {
     const patterns = [
-      `user:${userId}`,
-      "posts:*" // User posts might be cached
+      `*user*${userId}*`,
+      `*posts*` // User posts might be cached
     ];
 
     for (const pattern of patterns) {

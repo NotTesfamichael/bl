@@ -36,7 +36,10 @@ export function PostPageClient({
         const postData = await apiClient.getPostBySlug(slug);
         setPost(postData);
       } catch (err) {
-        console.error("Error fetching post:", err);
+        // Don't log 404 errors as they might be private posts
+        if (!(err instanceof Error && err.message.includes("Post not found"))) {
+          console.error("Error fetching post:", err);
+        }
         setError(true);
       } finally {
         setLoading(false);

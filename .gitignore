@@ -8,6 +8,7 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.backup
 */.env
 */.env.local
 */.env.development.local
@@ -156,12 +157,7 @@ public/uploads/
 
 # Docker
 .dockerignore
-Dockerfile*
-docker-compose*.yml
-!docker-compose.yml.example
 */.dockerignore
-*/Dockerfile*
-*/docker-compose*.yml
 
 # Testing
 coverage/
@@ -189,4 +185,4 @@ test-results.xml
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.db.env.backup

@@ -35,7 +35,7 @@ class ApiClient {
       typeof window !== "undefined"
         ? process.env.NEXT_PUBLIC_EXTERNAL_API_URL ||
           "http://localhost:3001/api"
-        : this.baseURL;
+        : process.env.NEXT_PUBLIC_API_URL || "http://backend:3001/api";
 
     const url = `${baseURL}${endpoint}`;
     const headers: Record<string, string> = {
@@ -72,7 +72,11 @@ class ApiClient {
       }
 
       // Only log errors for authenticated requests or non-auth endpoints
-      if (this.token || !endpoint.includes("/auth/")) {
+      // Don't log 404 errors for posts as they might be private posts
+      if (
+        (this.token || !endpoint.includes("/auth/")) &&
+        !(response.status === 404 && endpoint.includes("/posts/"))
+      ) {
         console.error(
           `API Error for ${endpoint}:`,
           error,
