@@ -62,9 +62,12 @@ export function Header({ blogPostActions }: HeaderProps = {}) {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center">
             <h1 className="text-xl sm:text-2xl font-bold text-black">
-              <Link href="/" className="hover:text-[#556B2F] transition-colors">
+              <button
+                onClick={() => (window.location.href = "/")}
+                className="hover:text-[#556B2F] transition-colors cursor-pointer"
+              >
                 Kiyadur
-              </Link>
+              </button>
             </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
