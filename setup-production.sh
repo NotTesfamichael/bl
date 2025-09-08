@@ -2,6 +2,10 @@
 
 echo "🚀 Setting up Notes Blog Application for Production..."
 
+# Default admin credentials
+DEFAULT_ADMIN_EMAIL="admin@notesblog.local"
+DEFAULT_ADMIN_PASSWORD="admin123"
+
 # Check if .env file exists
 if [ ! -f .env ]; then
     echo "❌ .env file not found. Please create one based on env.example"
@@ -11,23 +15,34 @@ fi
 # Function to prompt for admin credentials
 prompt_admin_credentials() {
     echo ""
-    echo "🔐 Please provide credentials for the admin user:"
+    echo "🔐 Admin user setup:"
+    echo "   Default email: ${DEFAULT_ADMIN_EMAIL}"
+    echo "   Default password: ${DEFAULT_ADMIN_PASSWORD}"
+    echo ""
+    echo "⚠️  IMPORTANT: Change these credentials after first login!"
     echo ""
     
-    # Admin credentials
-    read -p "Admin email: " ADMIN_EMAIL
-    while [ -z "$ADMIN_EMAIL" ]; do
-        echo "❌ Admin email is required"
+    read -p "Use default credentials? (y/n): " USE_DEFAULT
+    if [[ $USE_DEFAULT =~ ^[Yy]$ ]]; then
+        ADMIN_EMAIL="${DEFAULT_ADMIN_EMAIL}"
+        ADMIN_PASSWORD="${DEFAULT_ADMIN_PASSWORD}"
+        echo "✅ Using default credentials"
+    else
+        # Admin credentials
         read -p "Admin email: " ADMIN_EMAIL
-    done
-    
-    read -s -p "Admin password: " ADMIN_PASSWORD
-    while [ -z "$ADMIN_PASSWORD" ]; do
-        echo ""
-        echo "❌ Admin password is required"
+        while [ -z "$ADMIN_EMAIL" ]; do
+            echo "❌ Admin email is required"
+            read -p "Admin email: " ADMIN_EMAIL
+        done
+        
         read -s -p "Admin password: " ADMIN_PASSWORD
-    done
-    echo ""
+        while [ -z "$ADMIN_PASSWORD" ]; do
+            echo ""
+            echo "❌ Admin password is required"
+            read -s -p "Admin password: " ADMIN_PASSWORD
+        done
+        echo ""
+    fi
     
     echo "✅ Admin credentials collected"
 }
@@ -69,23 +84,39 @@ main() {
     # Create secure environment
     create_secure_env
 
-    # Build and start services
-    echo "🔨 Building and starting services..."
-    docker-compose --env-file .env --env-file .env.seed up -d --build
+    # Start only database and redis first
+    echo "🔨 Starting database and cache services..."
+    docker-compose up -d postgres redis
 
-    # Wait for services to be healthy
-    echo "⏳ Waiting for services to be ready..."
-    sleep 15
+    # Wait for database to be ready
+    echo "⏳ Waiting for database to be ready..."
+    until docker exec notes-blog-postgres pg_isready -U postgres -d notes_blog; do
+        echo "   Database not ready, waiting 2 seconds..."
+        sleep 2
+    done
+    echo "✅ Database is ready!"
+
+    # Start backend service
+    echo "🔨 Starting backend service..."
+    docker-compose up -d backend
+
+    # Wait for backend to be ready
+    echo "⏳ Waiting for backend to be ready..."
+    sleep 10
 
     # Push database schema
     echo "🗄️  Pushing database schema..."
     docker exec notes-blog-backend npx prisma db push
 
-    # Seed the database with secure credentials
-    echo "🌱 Seeding database with provided credentials..."
+    # Start frontend service
+    echo "🔨 Starting frontend service..."
+    docker-compose up -d frontend
+
+    # Seed the database with admin credentials
+    echo "🌱 Seeding database with admin credentials..."
     docker exec -e SEED_ADMIN_EMAIL="${ADMIN_EMAIL}" \
                 -e SEED_ADMIN_PASSWORD="${ADMIN_PASSWORD}" \
-                notes-blog-backend npm run db:seed
+                notes-blog-backend npx prisma db seed
 
     # Cleanup sensitive files
     cleanup
@@ -98,16 +129,20 @@ main() {
     echo "   Backend API: http://localhost:3001/api"
     echo "   Health Check: http://localhost:3001/api/health"
     echo ""
-    echo "👥 Users Created:"
-    echo "   👑 Admin: ${ADMIN_EMAIL}"
+    echo "👥 Admin User Created:"
+    echo "   👑 Email: ${ADMIN_EMAIL}"
+    echo "   🔑 Password: ${ADMIN_PASSWORD}"
     echo ""
-    echo "🔒 Security Notes:"
-    echo "   - Credentials are not stored in any files"
-    echo "   - Use strong passwords in production"
-    echo "   - Consider changing default credentials"
+    echo "🔒 IMPORTANT Security Steps:"
+    echo "   1. Log in to http://localhost:3000"
+    echo "   2. Go to your profile/settings"
+    echo "   3. Change the email and password immediately"
+    echo "   4. Update any other security settings"
     echo ""
-    echo "📝 To stop: docker-compose down"
-    echo "📝 To view logs: docker-compose logs -f"
+    echo "📝 Management Commands:"
+    echo "   Stop: docker-compose down"
+    echo "   View logs: docker-compose logs -f"
+    echo "   Restart: docker-compose restart"
 }
 
 # Run main function

@@ -12,7 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d notes_blog"]
       interval: 10s
@@ -41,9 +41,7 @@ services:
 
   # Backend API
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: kiyadur/kiyadur:blog-backend
     container_name: notes-blog-backend
     restart: unless-stopped
     ports:
@@ -85,12 +83,7 @@ services:
 
   # Frontend Application
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://backend:3001/api
-        NEXT_PUBLIC_EXTERNAL_API_URL: http://localhost:3001/api
+    image: kiyadur/kiyadur:blog-frontend
     container_name: notes-blog-frontend
     restart: unless-stopped
     ports:
