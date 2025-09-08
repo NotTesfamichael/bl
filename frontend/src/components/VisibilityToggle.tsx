@@ -25,19 +25,28 @@ export function VisibilityToggle({
       icon: Eye,
       description: "Show all posts"
     },
-    {
-      key: "public" as const,
-      label: "Public",
-      icon: Globe,
-      description: "Show only public posts"
-    },
+    // Only show "My posts" option if user is authenticated
+    ...(isAuthenticated
+      ? [
+          {
+            key: "public" as const,
+            label: "My Posts",
+            icon: Globe,
+            description: "Show only your public posts"
+          }
+        ]
+      : []),
     // Only show private option if user is authenticated
-    ...(isAuthenticated ? [{
-      key: "private" as const,
-      label: "Private",
-      icon: Lock,
-      description: "Show only private posts"
-    }] : [])
+    ...(isAuthenticated
+      ? [
+          {
+            key: "private" as const,
+            label: "Private",
+            icon: Lock,
+            description: "Show only private posts"
+          }
+        ]
+      : [])
   ];
 
   return (
