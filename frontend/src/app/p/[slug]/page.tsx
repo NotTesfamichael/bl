@@ -139,7 +139,7 @@ export default async function PostPage({ params }: PostPageProps) {
       return <PostPageClient slug={slug} isPrivate={true} />;
     }
   } catch (error) {
-    console.error("Error fetching post:", error);
+    // Don't log SSR errors as they might be expected (private posts, etc.)
     // If server-side fetch fails, try client-side (might be a private post)
     return <PostPageClient slug={slug} isPrivate={false} />;
   }
@@ -175,7 +175,7 @@ export async function generateMetadata({ params }: PostPageProps) {
       }
     };
   } catch (error) {
-    console.error("Error fetching post metadata:", error);
+    // Don't log SSR errors as they might be expected (private posts, etc.)
     return {
       title: "Post Not Found"
     };

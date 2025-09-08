@@ -13,7 +13,8 @@ async function getPosts() {
     });
     return response;
   } catch (error) {
-    console.error("Error fetching posts:", error);
+    // Don't log SSR errors as they might be expected (private posts, etc.)
+    // Just return empty state for graceful fallback
     return { posts: [], pagination: { total: 0, pages: 0 } };
   }
 }
