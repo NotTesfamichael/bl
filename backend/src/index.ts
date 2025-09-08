@@ -36,9 +36,14 @@ app.use(helmet());
 // app.use(limiter);
 
 // CORS configuration
+const frontendUrl = process.env.FRONTEND_URL;
+if (!frontendUrl) {
+  throw new Error("FRONTEND_URL environment variable is required");
+}
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: frontendUrl,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
@@ -130,8 +135,16 @@ process.on("SIGTERM", async () => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔗 API base URL: http://localhost:${PORT}/api`);
+  console.log(
+    `📊 Health check: ${
+      process.env.BACKEND_URL || `http://localhost:${PORT}`
+    }/health`
+  );
+  console.log(
+    `🔗 API base URL: ${
+      process.env.BACKEND_URL || `http://localhost:${PORT}`
+    }/api`
+  );
 });
 
 export default app;

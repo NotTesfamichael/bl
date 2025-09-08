@@ -24,8 +24,10 @@ export function HomePageClient({
   initialPagination
 }: HomePageClientProps) {
   const { isAuthenticated } = useAuth();
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
-  const [pagination, setPagination] = useState(initialPagination);
+  const [posts, setPosts] = useState<Post[]>(initialPosts || []);
+  const [pagination, setPagination] = useState(
+    initialPagination || { total: 0, pages: 0 }
+  );
   const [currentView, setCurrentView] = useState<"all" | "public" | "private">(
     "all"
   );
@@ -92,8 +94,8 @@ export function HomePageClient({
           <div className="flex-1">
             <SearchBar onSearch={handleSearch} />
           </div>
-          <VisibilityToggle 
-            currentView={currentView} 
+          <VisibilityToggle
+            currentView={currentView}
             onViewChange={handleViewChange}
             className="w-full sm:w-auto"
             isAuthenticated={isAuthenticated}
@@ -116,7 +118,7 @@ export function HomePageClient({
       )}
 
       {/* Posts Grid */}
-      {!loading && (
+      {!loading && posts && posts.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map((post) => (
             <PostCard key={post.id} post={post} />
@@ -125,7 +127,7 @@ export function HomePageClient({
       )}
 
       {/* Empty State */}
-      {!loading && posts.length === 0 && (
+      {!loading && (!posts || posts.length === 0) && (
         <div className="text-center py-12">
           <h2 className="text-2xl font-semibold text-black mb-4">
             {currentView === "private"

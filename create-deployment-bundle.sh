@@ -1,14 +1,14 @@
 #!/bin/bash
 
-echo "📦 Creating deployment bundle for Notes Blog..."
+echo "Creating deployment bundle for Notes Blog..."
 
 # Create deployment directory
 DEPLOY_DIR="notes-blog-deployment"
-echo "📁 Creating deployment directory: $DEPLOY_DIR"
+echo "Creating deployment directory: $DEPLOY_DIR"
 
 # Remove existing deployment directory if it exists
 if [ -d "$DEPLOY_DIR" ]; then
-    echo "🗑️  Removing existing deployment directory..."
+    echo "Removing existing deployment directory..."
     rm -rf "$DEPLOY_DIR"
 fi
 
@@ -16,7 +16,7 @@ fi
 mkdir -p "$DEPLOY_DIR"
 
 # Copy essential files
-echo "📋 Copying essential files..."
+echo "Copying essential files..."
 
 # Core configuration files
 cp docker-compose.yml "$DEPLOY_DIR/"
@@ -67,7 +67,7 @@ This bundle contains everything needed to deploy the Notes Blog application.
 - Email: `admin@notesblog.local`
 - Password: `admin123`
 
-**⚠️ IMPORTANT: Change these credentials after first login!**
+**WARNING: IMPORTANT: Change these credentials after first login!**
 
 ## Management Commands
 
@@ -90,14 +90,14 @@ If you need to seed the database manually:
 - At least 2GB RAM available for containers
 EOF
 
-echo "✅ Deployment bundle created successfully!"
+echo "Deployment bundle created successfully!"
 echo ""
-echo "📁 Location: $DEPLOY_DIR/"
+echo "Location: $DEPLOY_DIR/"
 echo ""
-echo "📋 Files included:"
+echo "Files included:"
 ls -la "$DEPLOY_DIR/"
 echo ""
-echo "🚀 To deploy:"
+echo "To deploy:"
 echo "   1. Copy the '$DEPLOY_DIR' folder to your target server"
 echo "   2. cd $DEPLOY_DIR"
 echo "   3. cp env.example .env"

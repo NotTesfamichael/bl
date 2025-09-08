@@ -1,7 +1,10 @@
 import { Post, Tag, PostsResponse } from "@/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL environment variable is required");
+}
 
 class ApiClient {
   private baseURL: string;
@@ -33,9 +36,16 @@ class ApiClient {
     // Use external URL for client-side requests, internal URL for server-side
     const baseURL =
       typeof window !== "undefined"
-        ? process.env.NEXT_PUBLIC_EXTERNAL_API_URL ||
-          "http://localhost:3001/api"
-        : process.env.NEXT_PUBLIC_API_URL || "http://backend:3001/api";
+        ? process.env.NEXT_PUBLIC_EXTERNAL_API_URL
+        : process.env.NEXT_PUBLIC_API_URL;
+
+    if (!baseURL) {
+      throw new Error(
+        typeof window !== "undefined"
+          ? "NEXT_PUBLIC_EXTERNAL_API_URL environment variable is required"
+          : "NEXT_PUBLIC_API_URL environment variable is required"
+      );
+    }
 
     const url = `${baseURL}${endpoint}`;
     const headers: Record<string, string> = {
@@ -152,8 +162,14 @@ class ApiClient {
   // Google OAuth methods
   getGoogleAuthUrl() {
     // For OAuth redirects, we need to use the external URL that the browser can access
-    const externalApiUrl =
-      process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://localhost:3001/api";
+    const externalApiUrl = process.env.NEXT_PUBLIC_EXTERNAL_API_URL;
+
+    if (!externalApiUrl) {
+      throw new Error(
+        "NEXT_PUBLIC_EXTERNAL_API_URL environment variable is required"
+      );
+    }
+
     return `${externalApiUrl}/auth/google`;
   }
 

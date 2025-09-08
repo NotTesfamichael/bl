@@ -1,23 +1,23 @@
 #!/bin/bash
 
-echo "👤 Creating a new user..."
+echo "Creating a new user..."
 
 # Check if .env file exists
 if [ ! -f .env ]; then
-    echo "❌ .env file not found. Please run setup-production.sh first"
+    echo "ERROR: .env file not found. Please run setup-production.sh first"
     exit 1
 fi
 
 # Function to prompt for user details
 prompt_user_details() {
     echo ""
-    echo "🔐 Please provide user details:"
+    echo "Please provide user details:"
     echo ""
     
     # User email
     read -p "User email: " USER_EMAIL
     while [ -z "$USER_EMAIL" ]; do
-        echo "❌ User email is required"
+        echo "ERROR: User email is required"
         read -p "User email: " USER_EMAIL
     done
     
@@ -25,7 +25,7 @@ prompt_user_details() {
     read -s -p "User password: " USER_PASSWORD
     while [ -z "$USER_PASSWORD" ]; do
         echo ""
-        echo "❌ User password is required"
+        echo "ERROR: User password is required"
         read -s -p "User password: " USER_PASSWORD
     done
     echo ""
@@ -43,15 +43,15 @@ prompt_user_details() {
     case $ROLE_CHOICE in
         1) USER_ROLE="AUTHOR" ;;
         2) USER_ROLE="ADMIN" ;;
-        *) echo "❌ Invalid choice, defaulting to AUTHOR"; USER_ROLE="AUTHOR" ;;
+        *) echo "ERROR: Invalid choice, defaulting to AUTHOR"; USER_ROLE="AUTHOR" ;;
     esac
     
-    echo "✅ User details collected"
+    echo "User details collected"
 }
 
 # Function to create user in database
 create_user() {
-    echo "🌱 Creating user in database..."
+    echo "Creating user in database..."
     
     # Create a temporary .env file with user credentials
     cat > .env.user << EOF
@@ -81,7 +81,7 @@ async function createUser() {
     const role = process.env.SEED_USER_ROLE;
 
     if (!email || !password) {
-      console.error('❌ Email and password are required');
+      console.error('ERROR: Email and password are required');
       process.exit(1);
     }
 
@@ -91,7 +91,7 @@ async function createUser() {
     });
 
     if (existingUser) {
-      console.error('❌ User with this email already exists');
+      console.error('ERROR: User with this email already exists');
       process.exit(1);
     }
 
@@ -108,13 +108,13 @@ async function createUser() {
       }
     });
 
-    console.log('✅ User created successfully:');
-    console.log('   Email:', user.email);
-    console.log('   Name:', user.name);
-    console.log('   Role:', user.role);
-    console.log('   ID:', user.id);
+    console.log('User created successfully:');
+    console.log('  Email:', user.email);
+    console.log('  Name:', user.name);
+    console.log('  Role:', user.role);
+    console.log('  ID:', user.id);
   } catch (error) {
-    console.error('❌ Error creating user:', error.message);
+    console.error('ERROR: Error creating user:', error.message);
     process.exit(1);
   } finally {
     await prisma.\$disconnect();
@@ -126,7 +126,7 @@ createUser();
     
     # Cleanup
     rm -f .env.user
-    echo "✅ User creation completed"
+    echo "User creation completed"
 }
 
 # Main execution
@@ -135,14 +135,14 @@ main() {
     create_user
     
     echo ""
-    echo "🎉 User creation completed successfully!"
+    echo "User creation completed successfully!"
     echo ""
-    echo "👤 User Details:"
-    echo "   Email: ${USER_EMAIL}"
-    echo "   Name: ${USER_NAME}"
-    echo "   Role: ${USER_ROLE}"
+    echo "User Details:"
+    echo "  Email: ${USER_EMAIL}"
+    echo "  Name: ${USER_NAME}"
+    echo "  Role: ${USER_ROLE}"
     echo ""
-    echo "🔗 Login at: http://localhost:3000/login"
+    echo "Login at: http://localhost:3000/login"
 }
 
 # Run main function

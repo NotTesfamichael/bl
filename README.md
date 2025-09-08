@@ -4,22 +4,22 @@ A full-stack blog application with private and public post functionality, built 
 
 ## Features
 
-- ✍️ **Create and manage posts** with markdown support
-- 🔒 **Private and Public posts** with visibility controls
-- 🔍 **Search functionality** across all posts
-- 🏷️ **Tag system** for organizing content
-- 💬 **Comments system** for engagement
-- 👤 **User authentication** with Google OAuth
-- 📱 **Responsive design** for all devices
+- **Create and manage posts** with markdown support
+- **Private and Public posts** with visibility controls
+- **Search functionality** across all posts
+- **Tag system** for organizing content
+- **Comments system** for engagement
+- **User authentication** with Google OAuth
+- **Responsive design** for all devices
 
-## Quick Start
-
-### Prerequisites
+## Prerequisites
 
 - Docker and Docker Compose
 - Git
 
-### Installation
+## Quick Start
+
+### Development Setup
 
 1. **Clone the repository**
 
@@ -28,22 +28,39 @@ A full-stack blog application with private and public post functionality, built 
    cd notes-blog
    ```
 
-2. **Start the application**
+2. **Run development setup**
 
    ```bash
-   docker-compose up -d
+   chmod +x setup-dev.sh
+   ./setup-dev.sh
    ```
 
 3. **Access the application**
    - Frontend: http://localhost:3000
-   - Backend API: http://localhost:3001
+   - Backend API: http://localhost:3001/api
+   - Health Check: http://localhost:3001/api/health
 
-That's it! The application will automatically:
+### Production Setup
 
-- Set up the PostgreSQL database
-- Run database migrations
-- Seed the database with sample data
-- Start all services
+1. **Configure environment**
+
+   ```bash
+   cp env.example .env
+   ```
+
+   Edit `.env` file with your production values:
+
+   - Change `JWT_SECRET` to a secure random string
+   - Update `FRONTEND_URL` and `BACKEND_URL` to your domain
+   - Configure OAuth credentials (Google, GitHub)
+   - Update database credentials if needed
+
+2. **Run production setup**
+
+   ```bash
+   chmod +x setup-production.sh
+   ./setup-production.sh
+   ```
 
 ## Default Accounts
 
@@ -72,9 +89,52 @@ The application comes with pre-created accounts:
 - Public posts: `http://localhost:3000/p/[slug]`
 - Private posts: `http://localhost:3000/p/private/[slug]`
 
+## Management Commands
+
+### Start Services
+
+```bash
+docker-compose up -d
+```
+
+### Stop Services
+
+```bash
+docker-compose down
+```
+
+### View Logs
+
+```bash
+# All services
+docker-compose logs -f
+
+# Specific service
+docker-compose logs -f backend
+docker-compose logs -f frontend
+```
+
+### Database Operations
+
+```bash
+# Push schema changes (for schema-first approach)
+docker exec notes-blog-backend npx prisma db push
+
+# Generate Prisma client (if schema changed)
+docker exec notes-blog-backend npx prisma generate
+
+# Reset database (WARNING: deletes all data)
+docker-compose down
+docker volume rm notes-blog_postgres_data
+docker-compose up -d
+
+# View database
+docker-compose exec backend npx prisma studio
+```
+
 ## Development
 
-### Running in Development Mode
+### Running Individual Services
 
 ```bash
 # Backend only
@@ -88,15 +148,11 @@ npm install
 npm run dev
 ```
 
-### Database Management
+### Additional Scripts
 
-```bash
-# Reset database
-docker-compose exec backend npx prisma migrate reset --force
-
-# View database
-docker-compose exec backend npx prisma studio
-```
+- **`seed-database.sh`** - Seed database with initial data
+- **`create-user.sh`** - Create new users
+- **`create-deployment-bundle.sh`** - Create production deployment bundle
 
 ## Project Structure
 
@@ -105,6 +161,8 @@ notes-blog/
 ├── backend/           # Express.js API server
 ├── frontend/          # Next.js frontend application
 ├── docker-compose.yml # Docker configuration
+├── setup-dev.sh       # Development setup script
+├── setup-production.sh # Production setup script
 └── README.md
 ```
 
@@ -117,6 +175,17 @@ notes-blog/
 - **Authentication**: JWT + Google OAuth
 - **Deployment**: Docker
 
+## Production Notes
+
+- All services run in Docker containers
+- Database data persists in Docker volumes
+- Services restart automatically on failure
+- Health checks ensure services are running properly
+- Credentials are not stored in files after setup
+- Database uses schema-first approach (no migration files needed)
+- "No migration found" message is normal and expected
+- Only creates one admin user (no hardcoded credentials)
+
 ## Troubleshooting
 
 ### Common Issues
@@ -124,6 +193,36 @@ notes-blog/
 1. **Port conflicts**: Make sure ports 3000 and 3001 are available
 2. **Database errors**: Run `docker-compose down -v` to reset everything
 3. **Build failures**: Check Docker logs with `docker-compose logs`
+
+### Services won't start
+
+```bash
+# Check logs
+docker-compose logs
+
+# Restart all services
+docker-compose restart
+```
+
+### Database connection issues
+
+```bash
+# Check database status
+docker exec notes-blog-postgres pg_isready -U postgres
+
+# View database logs
+docker-compose logs postgres
+```
+
+### Frontend not loading
+
+```bash
+# Check if backend is healthy
+curl http://localhost:3001/api/health
+
+# Check frontend logs
+docker-compose logs frontend
+```
 
 ### Reset Everything
 

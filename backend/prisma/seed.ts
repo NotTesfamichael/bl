@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting database seeding...");
+  console.log("Starting database seeding...");
 
   // Get admin credentials from environment variables (required)
   const adminEmail = process.env.SEED_ADMIN_EMAIL;
@@ -12,7 +12,7 @@ async function main() {
 
   if (!adminEmail || !adminPassword) {
     console.error(
-      "❌ SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables are required"
+      "ERROR: SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables are required"
     );
     process.exit(1);
   }
@@ -32,9 +32,9 @@ async function main() {
         role: "ADMIN"
       }
     });
-    console.log("✅ Admin user created:", admin.email);
+    console.log("Admin user created:", admin.email);
   } else {
-    console.log("ℹ️  Admin user already exists:", existingAdmin.email);
+    console.log("Admin user already exists:", existingAdmin.email);
   }
 
   // Create some sample tags
@@ -58,20 +58,20 @@ async function main() {
           slug: tagName.toLowerCase().replace(/\s+/g, "-")
         }
       });
-      console.log("✅ Tag created:", tag.name);
+      console.log("Tag created:", tag.name);
     } else {
-      console.log("ℹ️  Tag already exists:", existingTag.name);
+      console.log("Tag already exists:", existingTag.name);
     }
   }
 
-  console.log("🎉 Database seeding completed!");
-  console.log("\n📋 Users Created:");
-  console.log(`👑 Admin: ${adminEmail}`);
+  console.log("Database seeding completed!");
+  console.log("\nUsers Created:");
+  console.log(`Admin: ${adminEmail}`);
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Seeding failed:", e);
+    console.error("ERROR: Seeding failed:", e);
     process.exit(1);
   })
   .finally(async () => {
