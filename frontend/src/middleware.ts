@@ -12,13 +12,15 @@ export function middleware(request: NextRequest) {
   response.headers.set("X-XSS-Protection", "1; mode=block");
 
   // Content Security Policy
+  const apiUrl =
+    process.env.NEXT_PUBLIC_EXTERNAL_API_URL || "http://localhost:3001";
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Note: unsafe-inline needed for Next.js
     "style-src 'self' 'unsafe-inline'", // Note: unsafe-inline needed for Tailwind
     "img-src 'self' data: https:",
     "font-src 'self'",
-    "connect-src 'self' http://localhost:3001",
+    `connect-src 'self' ${apiUrl}`,
     "frame-ancestors 'none'"
   ].join("; ");
 
