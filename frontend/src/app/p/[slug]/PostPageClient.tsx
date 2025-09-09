@@ -25,7 +25,6 @@ export function PostPageClient({
   isPrivate = false
 }: PostPageClientProps) {
   // isPrivate parameter is used for future enhancements
-  console.log("PostPageClient isPrivate:", isPrivate);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

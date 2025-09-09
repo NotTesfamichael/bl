@@ -17,13 +17,15 @@ interface TagInputProps {
   onTagsChange: (tags: Tag[]) => void;
   availableTags: Tag[];
   onAvailableTagsChange: (tags: Tag[]) => void;
+  onTypingChange?: (isTyping: boolean) => void;
 }
 
 export function TagInput({
   selectedTags,
   onTagsChange,
   availableTags,
-  onAvailableTagsChange
+  onAvailableTagsChange,
+  onTypingChange
 }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -41,6 +43,11 @@ export function TagInput({
     const value = e.target.value;
     setInputValue(value);
     setShowSuggestions(value.length > 0);
+    
+    // Notify parent component that user is typing
+    if (onTypingChange) {
+      onTypingChange(value.length > 0);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -52,6 +59,11 @@ export function TagInput({
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
       setInputValue("");
+      
+      // Notify parent that user stopped typing
+      if (onTypingChange) {
+        onTypingChange(false);
+      }
     }
   };
 
@@ -88,37 +100,51 @@ export function TagInput({
       onTagsChange([...selectedTags, newTag]);
       setInputValue("");
       setShowSuggestions(false);
-      toast.success(`Tag "${newTag.name}" created successfully!`);
+      
+      // Notify parent that user stopped typing
+      if (onTypingChange) {
+        onTypingChange(false);
+      }
+      
+      toast.success(`Tag "${newTag.name}" created and added successfully!`);
     } catch (error: unknown) {
       if (error instanceof Error) {
         if (
           error.message.includes("401") ||
           error.message.includes("Unauthorized")
         ) {
-        toast.error("Please log in to create tags");
-        setInputValue("");
-        setShowSuggestions(false);
-      } else if (
-        error.message.includes("409") ||
-        error.message.includes("already exists")
-      ) {
-        // Tag already exists, try to find it and add it
-        toast.info(`Tag "${tagName}" already exists, adding it to your post`);
-        // Refresh available tags to get the existing tag
-        try {
-          const allTags = await apiClient.getTags();
-          const existingTag = allTags.find(
-            (tag: Tag) => tag.name.toLowerCase() === tagName.toLowerCase()
-          );
-          if (existingTag) {
-            onAvailableTagsChange(allTags);
-            onTagsChange([...selectedTags, existingTag]);
-            setInputValue("");
-            setShowSuggestions(false);
+          toast.error("Please log in to create tags");
+          setInputValue("");
+          setShowSuggestions(false);
+        } else if (
+          error.message.includes("409") ||
+          error.message.includes("already exists")
+        ) {
+          // Tag already exists on server, refresh tags and add it
+          try {
+            const allTags = await apiClient.getTags();
+            const existingTag = allTags.find(
+              (tag: Tag) => tag.name.toLowerCase() === tagName.toLowerCase()
+            );
+            if (existingTag) {
+              onAvailableTagsChange(allTags);
+              onTagsChange([...selectedTags, existingTag]);
+              setInputValue("");
+              setShowSuggestions(false);
+              
+              // Notify parent that user stopped typing
+              if (onTypingChange) {
+                onTypingChange(false);
+              }
+              
+              toast.success(`Tag "${existingTag.name}" added to your post`);
+            } else {
+              toast.error("Tag exists but could not be found");
+            }
+          } catch (refreshError) {
+            console.error("Failed to refresh tags:", refreshError);
+            toast.error("Failed to add existing tag");
           }
-        } catch (refreshError) {
-          console.error("Failed to refresh tags:", refreshError);
-        }
         } else {
           toast.error("Failed to create tag");
         }
@@ -146,11 +172,14 @@ export function TagInput({
     onTagsChange([...selectedTags, tag]);
     setInputValue("");
     setShowSuggestions(false);
+    
+    // Notify parent that user stopped typing
+    if (onTypingChange) {
+      onTypingChange(false);
+    }
   };
 
   const handleRemoveTag = (tagId: string, event?: React.MouseEvent) => {
-    console.log("Removing tag from post:", tagId);
-    console.log("Event:", event);
 
     // Prevent event bubbling
     if (event) {
@@ -160,7 +189,6 @@ export function TagInput({
 
     // Remove from selected tags immediately for better UX
     const updatedTags = selectedTags.filter((tag) => tag.id !== tagId);
-    console.log("Updated tags:", updatedTags);
     onTagsChange(updatedTags);
 
     // Don't remove from available tags - keep it available for reuse

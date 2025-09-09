@@ -21,13 +21,12 @@ const prisma = new PrismaClient();
 // Get all posts
 router.get("/", cache({ ttl: 300 }), async (req, res) => {
   try {
-    const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const search = searchParams.get("search");
-    const tag = searchParams.get("tag");
-    const status = searchParams.get("status") || "PUBLISHED";
-    const visibility = searchParams.get("visibility");
+    const page = parseInt((req.query.page as string) || "1");
+    const limit = parseInt((req.query.limit as string) || "10");
+    const search = req.query.search as string;
+    const tag = req.query.tag as string;
+    const status = (req.query.status as string) || "PUBLISHED";
+    const visibility = req.query.visibility as string;
 
     const where: Record<string, unknown> = { status };
 
@@ -223,10 +222,9 @@ router.get("/slug/:slug", cache({ ttl: 600 }), async (req, res) => {
   res: express.Response
 ) => {
   try {
-    const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const status = searchParams.get("status"); // Optional filter by status
+    const page = parseInt((req.query.page as string) || "1");
+    const limit = parseInt((req.query.limit as string) || "10");
+    const status = req.query.status as string; // Optional filter by status
 
     const where: Record<string, unknown> = {
       authorId: req.user!.userId

@@ -93,6 +93,15 @@ class ApiClient {
           `Status: ${response.status}`
         );
       }
+
+      // For 404 errors on posts endpoint, return empty result instead of throwing
+      if (response.status === 404 && endpoint.includes("/posts")) {
+        return {
+          posts: [],
+          pagination: { page: 1, limit: 10, total: 0, pages: 0 }
+        } as T;
+      }
+
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 

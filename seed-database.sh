@@ -41,7 +41,7 @@ docker exec notes-blog-backend npx prisma migrate deploy
 
 # Run Prisma seeding
 echo "Running Prisma seed..."
-docker exec notes-blog-backend npx prisma db seed
+docker exec -e SEED_ADMIN_EMAIL="$SEED_ADMIN_EMAIL" -e SEED_ADMIN_PASSWORD="$SEED_ADMIN_PASSWORD" notes-blog-backend npx prisma db seed
 
 echo "Database seeding completed!"
 echo ""

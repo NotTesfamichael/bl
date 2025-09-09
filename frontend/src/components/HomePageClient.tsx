@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PostCard } from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/SearchBar";
@@ -24,6 +25,9 @@ export function HomePageClient({
   initialPagination
 }: HomePageClientProps) {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [posts, setPosts] = useState<Post[]>(initialPosts || []);
   const [pagination, setPagination] = useState(
     initialPagination || { total: 0, pages: 0 }
@@ -33,21 +37,48 @@ export function HomePageClient({
   );
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Initialize state from URL parameters
+  useEffect(() => {
+    const page = parseInt(searchParams.get("page") || "1");
+    const search = searchParams.get("search") || "";
+    const view =
+      (searchParams.get("view") as "all" | "public" | "private") || "all";
+
+    setCurrentPage(page);
+    setSearchQuery(search);
+    setCurrentView(view);
+
+    // Always fetch posts on initial load or when parameters change
+    fetchPosts(view, search, page, false);
+  }, [searchParams]);
+
+  // Fetch posts on initial mount if no initial posts provided
+  useEffect(() => {
+    if (initialPosts.length === 0) {
+      fetchPosts("all", "", 1, false);
+    }
+  }, []);
 
   const fetchPosts = async (
     view: "all" | "public" | "private",
-    search?: string
+    search?: string,
+    page: number = 1,
+    append: boolean = false
   ) => {
     setLoading(true);
     try {
       const params: {
         status: string;
         limit: number;
+        page?: number;
         visibility?: "PUBLIC" | "PRIVATE";
         search?: string;
       } = {
         status: "PUBLISHED",
-        limit: 10
+        limit: 12,
+        page: page
       };
 
       // Add visibility filter based on view
@@ -63,13 +94,29 @@ export function HomePageClient({
       }
 
       const response = await apiClient.getPosts(params);
-      setPosts(response.posts);
+
+      if (append) {
+        setPosts((prev) => [...prev, ...response.posts]);
+      } else {
+        setPosts(response.posts);
+      }
       setPagination(response.pagination);
+      setCurrentPage(page);
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateURL = (page: number, search: string, view: string) => {
+    const params = new URLSearchParams();
+    if (page > 1) params.set("page", page.toString());
+    if (search) params.set("search", search);
+    if (view !== "all") params.set("view", view);
+
+    const newURL = params.toString() ? `/?${params.toString()}` : "/";
+    router.push(newURL, { scroll: false });
   };
 
   const handleViewChange = (view: "all" | "public" | "private") => {
@@ -78,12 +125,31 @@ export function HomePageClient({
       return;
     }
     setCurrentView(view);
-    fetchPosts(view, searchQuery);
+    setCurrentPage(1);
+    updateURL(1, searchQuery, view);
+    fetchPosts(view, searchQuery, 1, false);
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    fetchPosts(currentView, query);
+    setCurrentPage(1);
+    updateURL(1, query, currentView);
+    fetchPosts(currentView, query, 1, false);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    updateURL(page, searchQuery, currentView);
+    fetchPosts(currentView, searchQuery, page, false);
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1;
+    if (nextPage <= pagination.pages) {
+      setCurrentPage(nextPage);
+      updateURL(nextPage, searchQuery, currentView);
+      fetchPosts(currentView, searchQuery, nextPage, true);
+    }
   };
 
   return (
@@ -152,10 +218,99 @@ export function HomePageClient({
         </div>
       )}
 
-      {/* Load More */}
+      {/* Pagination */}
       {!loading && pagination.pages > 1 && (
-        <div className="text-center mt-12">
-          <Button variant="outline">Load More Posts</Button>
+        <div className="mt-12">
+          {/* Page Numbers */}
+          <div className="flex justify-center items-center gap-2 mb-6">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+              let pageNum;
+              if (pagination.pages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= pagination.pages - 2) {
+                pageNum = pagination.pages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(pageNum)}
+                  className={
+                    currentPage === pageNum ? "bg-[#556B2F] text-white" : ""
+                  }
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === pagination.pages}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.pages)}
+              disabled={currentPage === pagination.pages}
+            >
+              Last
+            </Button>
+          </div>
+
+          {/* Page Info */}
+          <div className="text-center text-sm text-gray-600 mb-4">
+            Page {currentPage} of {pagination.pages} ({pagination.total} total
+            posts)
+          </div>
+
+          {/* Load More Button */}
+          {currentPage < pagination.pages && (
+            <div className="text-center">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load More Posts"
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </main>

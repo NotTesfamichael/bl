@@ -97,7 +97,7 @@ services:
         - linux/arm64
       args:
         NEXT_PUBLIC_API_URL: http://backend:3001/api
-        NEXT_PUBLIC_EXTERNAL_API_URL: ${NEXT_PUBLIC_EXTERNAL_API_URL}
+        NEXT_PUBLIC_EXTERNAL_API_URL: ${NEXT_PUBLIC_EXTERNAL_API_URL:-http://127.0.0.1:3001/api}
     image: kiyadur/kiyadur:blog-frontend
     container_name: notes-blog-frontend
     restart: unless-stopped

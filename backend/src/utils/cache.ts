@@ -165,9 +165,9 @@ export const cacheInvalidation = {
   // Invalidate tag-related caches
   async invalidateTags(): Promise<void> {
     const patterns = [
-      "tags",
-      "tag:*",
-      "posts:*" // Posts might be filtered by tags
+      "*GET:/api/tags*", // Match the actual cache key for tags endpoint
+      "*posts*", // Posts might be filtered by tags
+      "*search*" // Search might include tags
     ];
 
     for (const pattern of patterns) {

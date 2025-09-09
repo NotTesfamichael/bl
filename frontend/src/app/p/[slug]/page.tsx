@@ -138,7 +138,7 @@ export default async function PostPage({ params }: PostPageProps) {
       // For private posts, use client-side rendering
       return <PostPageClient slug={slug} isPrivate={true} />;
     }
-  } catch (error) {
+  } catch {
     // Don't log SSR errors as they might be expected (private posts, etc.)
     // If server-side fetch fails, try client-side (might be a private post)
     return <PostPageClient slug={slug} isPrivate={false} />;
@@ -174,7 +174,7 @@ export async function generateMetadata({ params }: PostPageProps) {
         type: "article"
       }
     };
-  } catch (error) {
+  } catch {
     // Don't log SSR errors as they might be expected (private posts, etc.)
     return {
       title: "Post Not Found"

@@ -30,7 +30,7 @@ export default async function PrivatePostPage({
 
     // For private posts, use client-side rendering to handle authentication
     return <PostPageClient slug={slug} isPrivate={true} />;
-  } catch (error) {
+  } catch {
     // Don't log SSR errors as they might be expected (authentication issues, etc.)
     // If server-side fetch fails, try client-side (might be authentication issue)
     return <PostPageClient slug={slug} isPrivate={true} />;
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: PrivatePostPageProps) {
       description: "This is a private post",
       robots: "noindex, nofollow" // Prevent search engine indexing
     };
-  } catch (error) {
+  } catch {
     // Don't log SSR errors as they might be expected (authentication issues, etc.)
     return {
       title: "Private Post Not Found"

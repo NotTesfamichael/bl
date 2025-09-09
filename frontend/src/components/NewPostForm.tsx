@@ -70,6 +70,7 @@ export function NewPostForm({
   const [isPreview, setIsPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isTypingInTags, setIsTypingInTags] = useState(false);
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">(
     post?.visibility || "PUBLIC"
   );
@@ -110,7 +111,6 @@ export function NewPostForm({
         tagIds: selectedTags.map((tag: Tag) => tag.id)
       };
 
-      console.log("Saving draft with data:", postData);
 
       let response;
       if (isEditing && post?.id) {
@@ -174,16 +174,17 @@ export function NewPostForm({
     loadTags();
   }, []);
 
-  // Autosave every 3 seconds
+  // Autosave every 5 seconds, but only for content and title changes
+  // Don't autosave when user is actively typing in tags
   useEffect(() => {
-    if (!content || !title) return;
+    if (!content || !title || isTypingInTags) return;
 
     const timer = setTimeout(() => {
       saveDraft();
-    }, 3000);
+    }, 5000);
 
     return () => clearTimeout(timer);
-  }, [content, title, saveDraft]);
+  }, [content, title, isTypingInTags, saveDraft]);
 
   const handlePublish = async () => {
     if (!title || !content) {
@@ -449,6 +450,7 @@ export function NewPostForm({
               onTagsChange={handleTagsChange}
               availableTags={availableTags}
               onAvailableTagsChange={handleAvailableTagsChange}
+              onTypingChange={setIsTypingInTags}
             />
           </CardContent>
         </Card>

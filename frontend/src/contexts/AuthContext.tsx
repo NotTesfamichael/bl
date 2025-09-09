@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.user);
       } catch {
         // Token is invalid or expired - silently clear it
-        console.log("Token verification failed, clearing auth state");
         apiClient.logout();
         setUser(null);
       } finally {
